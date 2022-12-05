@@ -7,12 +7,20 @@
 
 int main()
 {
+    MatrixClass::srand(time(NULL));
+    MatrixClass::set_allocations_debug(false);
 
-    MatrixClass matrix = MatrixClass::create(3, 3);
+    MatrixClass matrix = MatrixClass::create_matrix_random_int(DIAGONAL, 3, 3).set_name("matrix");
+    MatrixClass transpose = matrix.transpose();
+    MatrixClass bigger = matrix.resize(2, 2).set_name("resized");
 
-    matrix.fill(5);
+    float determinent = matrix.determinent();
 
-    matrix.print();
+    std::cout << "det(matrix)=" << determinent << std::endl;
+
+    std::cout << matrix << std::endl;
+    std::cout << transpose << std::endl;
+    std::cout << bigger << std::endl;
 
     return 0;
 }
