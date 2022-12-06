@@ -27,14 +27,13 @@ typedef enum MatrixType MatrixType;
 enum Debug
 {
     NONE = 1,
-    ALL = 2,
-    MATRIX_CREATION = 4,
-    MATRIX_ALLOCATION = 8,
-    MATRIX_DESTRUCTION = 16,
-    MATRIX_DESALLOCATION = 32,
-    MISC = 64,
+    MATRIX_CREATION = 2,
+    MATRIX_ALLOCATION = 4,
+    MATRIX_DESTRUCTION = 8,
+    MATRIX_DESALLOCATION = 16,
+    MISC = 32,
+    ALL = MATRIX_CREATION | MATRIX_ALLOCATION | MATRIX_DESTRUCTION | MATRIX_DESALLOCATION | MISC,
 };
-typedef enum Debug Debug;
 
 typedef const std::function<void(size_t, size_t, float)> &Consumer;
 typedef const std::function<float(size_t, size_t, float)> &Producer;
@@ -64,7 +63,6 @@ private:
 
 public:
     // add matrix element by element multiplication and matrix element by element division
-
     /*reduce functions*/
 
     static void srand(unsigned int seed);

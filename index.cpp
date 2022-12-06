@@ -12,7 +12,7 @@ float vector_array[] = {1, 2, 3};
 int main()
 {
     MatrixClass::srand(time(NULL));
-    MatrixClass::set_debug_options(MISC);
+    MatrixClass::set_debug_options(Debug::ALL);
 
     Sle system = Sle::create_power_system(3);
 
@@ -28,13 +28,5 @@ int main()
 
     std::cout << "program-end" << std::endl;
 
-    /*
-    std::cout << matrix << std::endl;
-
-    auto [lower, upper] = matrix.lu_decomposition();
-
-    std::cout << lower << std::endl;
-    std::cout << upper << std::endl;
-    */
-    return 0;
+      return 0;
 }

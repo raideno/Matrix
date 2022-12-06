@@ -345,7 +345,7 @@ void MatrixClass::desallocate(MatrixClass &matrix)
 
     free(matrix.content);
 
-    if (MatrixClass::is_debug_option_set(ALL) || MatrixClass::is_debug_option_set(MATRIX_DESALLOCATION))
+    if (MatrixClass::is_debug_option_set(Debug::MATRIX_DESALLOCATION))
         printf(COLOR_RED "[MatrixClass-desallocate]:" COLOR_RESET "a matrix (%s) got desallocated\n", strlen(matrix.name) == 0 ? "/" : matrix.name);
 
     MatrixClass::desallocated_matrices++;
@@ -375,12 +375,12 @@ MatrixClass::~MatrixClass()
     this->m = 0;
     this->content = NULL;
 
-    if (MatrixClass::is_debug_option_set(ALL) || MatrixClass::is_debug_option_set(MATRIX_DESTRUCTION))
+    if (MatrixClass::is_debug_option_set(Debug::MATRIX_DESTRUCTION))
         printf(COLOR_RED "[~MatrixClass]:" COLOR_RESET "a matrix (%s) got destroyed\n", strlen(this->name) == 0 ? "/" : this->name);
 
     MatrixClass::destroyed_matrices++;
 
-    if (MatrixClass::is_debug_option_set(ALL) || MatrixClass::is_debug_option_set(MISC))
+    if (MatrixClass::is_debug_option_set(Debug::MISC))
         printf(COLOR_YELLOW "[~MatrixClass-]:" COLOR_RESET "%ld, %ld, %ld, %ld (created, allocated, destroyed, desallocated)\n", MatrixClass::created_matrices, MatrixClass::allocated_matrices, MatrixClass::destroyed_matrices, MatrixClass::desallocated_matrices);
 }
 
@@ -1269,7 +1269,7 @@ MatrixClass::MatrixClass()
     this->n = 0;
     this->content = NULL;
 
-    if (MatrixClass::is_debug_option_set(ALL) || MatrixClass::is_debug_option_set(MATRIX_CREATION))
+    if (MatrixClass::is_debug_option_set(Debug::MATRIX_CREATION))
         printf(COLOR_GREEN "[MatrixClass]:" COLOR_RESET "empty matrix got created\n");
 
     MatrixClass::created_matrices++;
@@ -1371,7 +1371,7 @@ MatrixClass::MatrixClass(size_t n, size_t m)
     this->m = m;
     this->content = this->allocate_matrix(n, m);
 
-    if (MatrixClass::is_debug_option_set(ALL) || MatrixClass::is_debug_option_set(MATRIX_CREATION))
+    if (MatrixClass::is_debug_option_set(Debug::MATRIX_CREATION))
         printf(COLOR_GREEN "[MatrixClass]:" COLOR_RESET "matrix got created\n");
 }
 
@@ -1392,7 +1392,7 @@ float **MatrixClass::allocate_matrix(size_t n, size_t m)
         }
     }
 
-    if (MatrixClass::is_debug_option_set(ALL) || MatrixClass::is_debug_option_set(MATRIX_ALLOCATION))
+    if (MatrixClass::is_debug_option_set(Debug::MATRIX_ALLOCATION))
         printf(COLOR_GREEN "[MatrixClass-allocate_matrix]:" COLOR_RESET "matrix-content allocation has been made\n");
 
     MatrixClass::allocated_matrices++;
