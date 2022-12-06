@@ -9,7 +9,132 @@
 #include "util.hpp"
 #include "matrix.hpp"
 
-bool allocations_debug = false;
+/*
+MatrixClass &MatrixClass::select_lines_array(size_t *array, size_t size)
+{
+}
+
+MatrixClass &MatrixClass::select_columns_array(size_t *array, size_t size)
+{
+}
+
+MatrixClass &MatrixClass::select_array(size_t *lines, size_t n_lines, size_t *columns, size_t n_columns)
+{
+}
+*/
+void MatrixClass::set_debug_options(Debug debug)
+{
+    MatrixClass::debug_options = debug;
+}
+
+bool MatrixClass::is_debug_option_set(Debug debug_option)
+{
+    return (MatrixClass::debug_options & debug_option) == debug_option;
+}
+
+void MatrixClass::set(size_t i, size_t j, float element)
+{
+    this->content[i][j] = element;
+}
+
+// not sure it works
+MatrixClass &MatrixClass::select_lines_array(size_t *array, size_t size)
+{
+    // check that matrix isn't null check that lines in array are valid, cehck that size isn't bigger than the number of lines
+
+    MatrixClass *result = new MatrixClass(size, this->m);
+
+    for (size_t i = 0; i < size; i++)
+        for (size_t j = 0; j < this->m; j++)
+            (*result)[i][j] = (*this)[array[i]][j];
+
+    return *result;
+}
+
+// not sure it works
+MatrixClass &MatrixClass::select_columns_array(size_t *array, size_t size)
+{
+    // check that matrix isn't null check that lines in array are valid, cehck that size isn't bigger than the number of lines
+
+    MatrixClass *result = new MatrixClass(this->n, size);
+
+    for (size_t i = 0; i < this->n; i++)
+        for (size_t j = 0; j < size; j++)
+            (*result)[i][j] = (*this)[i][array[j]];
+
+    return *result;
+}
+
+MatrixClass &MatrixClass::select_array(size_t *lines, size_t n_lines, size_t *columns, size_t n_columns)
+{
+    // do checks
+
+    MatrixClass *temp;
+    MatrixClass *result = NULL;
+
+    temp = &this->select_lines_array(lines, n_lines);
+
+    result = &this->select_columns_array(columns, n_columns);
+
+    // Todo: make sure temp is properly detroyed
+    // destroy_matrix(temp);
+
+    return *result;
+}
+
+std::pair<MatrixClass &, MatrixClass &> MatrixClass::lu_decomposition()
+{
+    // check that matrix is square and compatible, det != 0
+
+    MatrixClass *u = &this->copy().set_name("upper");
+    MatrixClass *l = &(new MatrixClass(this->n, this->m))->set_name("lower"); // make it's diagonal ones
+
+    l->map(
+        DIAGONAL, [](size_t i, size_t j, float element) -> float
+        { return 1; },
+        true);
+
+    // ajouter le truc en cas ou le pivot = 0 pour permuter entre deux lignes
+    // check that dimensions are good
+
+    // printf("gauss:\n\t");
+
+    // check if the system is solvable or not
+
+    for (size_t k = 0; k < this->n; k++) // to go through all the pivots
+    {
+        for (size_t i = k + 1; i < this->n; i++) // go though all the lines below the pivot to create zeros
+        {
+            float a = (*u)[k][k];
+            float b = (*u)[i][k];
+            float factor = b / a;
+            for (size_t j = k; j < this->n; j++)
+            {
+                (*u)[i][j] = (*u)[i][j] - factor * (*u)[k][j];
+                (*l)[i][k] = factor;
+            }
+        }
+    }
+
+    return std::pair<MatrixClass &, MatrixClass &>(*l, *u);
+}
+
+// should we remove the destructive option ?
+MatrixClass &MatrixClass::copy_matrix_in(MatrixClass &dest, MatrixClass &src, size_t startI, size_t startJ, bool destructive)
+{
+    MatrixClass *result = destructive ? &dest : &dest.copy();
+
+    for (size_t i = startI; i < startI + src.n; i++)
+        for (size_t j = startJ; j < startJ + src.m; j++)
+            (*result)[i][j] = src[i - startI][j - startJ];
+
+    return *result;
+}
+
+std::pair<std::size_t, std::size_t> MatrixClass::size()
+{
+    return std::pair<std::size_t, std::size_t>(this->n, this->m);
+}
 
 MatrixType MatrixClass::type()
 {
@@ -67,15 +192,6 @@ MatrixType MatrixClass::type()
 
     return NORMAL;
 }
-
-void MatrixClass::set_allocations_debug(bool value)
-{
-    allocations_debug = value;
-}
-
-MatrixClass &select_lines_array(size_t *array, size_t size);
-MatrixClass &select_columns_array(size_t *array, size_t size);
-MatrixClass &select_array(size_t *lines, size_t n_lines, size_t *columns, size_t n_columns);
 
 MatrixClass &MatrixClass::replace_lines(MatrixClass &matrixA, size_t Afrom, size_t Ato, MatrixClass &matrixB, size_t Bfrom, size_t Bto)
 {
@@ -174,7 +290,7 @@ MatrixClass &MatrixClass::resize(size_t n, size_t m, bool inline_)
     {
         MatrixClass save = this->copy().set_name("resize-save");
 
-        this->desallocate();
+        MatrixClass::desallocate(*this);
 
         this->allocate_matrix(n, m);
 
@@ -211,26 +327,28 @@ void MatrixClass::desallocate_matrices(size_t n_args, ...)
     for (size_t i = 0; i < n_args; i++)
     {
         matrix = va_arg(ap, MatrixClass *);
-        matrix->desallocate();
+        MatrixClass::desallocate(*matrix);
     }
 
     va_end(ap);
 }
 
-void MatrixClass::desallocate()
+void MatrixClass::desallocate(MatrixClass &matrix)
 {
 
-    if (this->content == NULL)
+    if (matrix.content == NULL)
         return;
 
-    for (size_t i = 0; i < this->n; i++)
-        if (this->content[i] != NULL)
-            free(this->content[i]);
+    for (size_t i = 0; i < matrix.n; i++)
+        if (matrix.content[i] != NULL)
+            free(matrix.content[i]);
 
-    free(this->content);
+    free(matrix.content);
 
-    if (allocations_debug)
-        printf(COLOR_RED "[MatrixClass-desallocate]:" COLOR_RESET "a matrix (%s) got desallocated\n", strlen(this->name) == 0 ? "/" : this->name);
+    if (MatrixClass::is_debug_option_set(ALL) || MatrixClass::is_debug_option_set(MATRIX_DESALLOCATION))
+        printf(COLOR_RED "[MatrixClass-desallocate]:" COLOR_RESET "a matrix (%s) got desallocated\n", strlen(matrix.name) == 0 ? "/" : matrix.name);
+
+    MatrixClass::desallocated_matrices++;
 
     // Todo: recheck this one
     // Not sure about this one
@@ -251,13 +369,19 @@ MatrixClass &MatrixClass::set_name(const char *name)
 MatrixClass::~MatrixClass()
 {
     // clear allocation/content
-    this->desallocate();
+    MatrixClass::desallocate(*this);
 
     this->n = 0;
     this->m = 0;
     this->content = NULL;
-    if (allocations_debug)
+
+    if (MatrixClass::is_debug_option_set(ALL) || MatrixClass::is_debug_option_set(MATRIX_DESTRUCTION))
         printf(COLOR_RED "[~MatrixClass]:" COLOR_RESET "a matrix (%s) got destroyed\n", strlen(this->name) == 0 ? "/" : this->name);
+
+    MatrixClass::destroyed_matrices++;
+
+    if (MatrixClass::is_debug_option_set(ALL) || MatrixClass::is_debug_option_set(MISC))
+        printf(COLOR_YELLOW "[~MatrixClass-]:" COLOR_RESET "%ld, %ld, %ld, %ld (created, allocated, destroyed, desallocated)\n", MatrixClass::created_matrices, MatrixClass::allocated_matrices, MatrixClass::destroyed_matrices, MatrixClass::desallocated_matrices);
 }
 
 // make the print check the max in the column and not in the entire matrix
@@ -1064,7 +1188,7 @@ MatrixClass &MatrixClass::transpose(bool destructive)
         this->m = save.n;
         // TODO: destroy the old matrice
 
-        this->desallocate();
+        MatrixClass::desallocate(*this);
 
         this->content = allocate_matrix(this->n, this->m);
 
@@ -1145,8 +1269,10 @@ MatrixClass::MatrixClass()
     this->n = 0;
     this->content = NULL;
 
-    if (allocations_debug)
+    if (MatrixClass::is_debug_option_set(ALL) || MatrixClass::is_debug_option_set(MATRIX_CREATION))
         printf(COLOR_GREEN "[MatrixClass]:" COLOR_RESET "empty matrix got created\n");
+
+    MatrixClass::created_matrices++;
 }
 
 MatrixClass &MatrixClass::permute_lines(size_t L1, size_t L2, bool destructive)
@@ -1200,7 +1326,7 @@ MatrixClass &MatrixClass::matrix_from_array(MatrixType type, float *array, size_
     return *matrix;
 }
 
-MatrixClass &create_matrix_with(MatrixType type, size_t n, size_t m, float number)
+MatrixClass &MatrixClass::create_matrix_with(MatrixType type, size_t n, size_t m, float number)
 {
     MatrixClass *matrix = new MatrixClass(n, m);
 
@@ -1238,11 +1364,14 @@ MatrixClass &create_matrix_random_float(MatrixType type, size_t n, size_t m, flo
 
 MatrixClass::MatrixClass(size_t n, size_t m)
 {
+
+    MatrixClass::created_matrices++;
+
     this->n = n;
     this->m = m;
     this->content = this->allocate_matrix(n, m);
 
-    if (allocations_debug)
+    if (MatrixClass::is_debug_option_set(ALL) || MatrixClass::is_debug_option_set(MATRIX_CREATION))
         printf(COLOR_GREEN "[MatrixClass]:" COLOR_RESET "matrix got created\n");
 }
 
@@ -1263,8 +1392,10 @@ float **MatrixClass::allocate_matrix(size_t n, size_t m)
         }
     }
 
-    if (allocations_debug)
+    if (MatrixClass::is_debug_option_set(ALL) || MatrixClass::is_debug_option_set(MATRIX_ALLOCATION))
         printf(COLOR_GREEN "[MatrixClass-allocate_matrix]:" COLOR_RESET "matrix-content allocation has been made\n");
+
+    MatrixClass::allocated_matrices++;
 
     return result;
 }

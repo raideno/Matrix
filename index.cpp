@@ -2,25 +2,39 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "sle.hpp"
 #include "util.hpp"
 #include "matrix.hpp"
+
+float matrix_array[] = {1, 6, 9, 2, 1, 2, 3, 6, 9};
+float vector_array[] = {1, 2, 3};
 
 int main()
 {
     MatrixClass::srand(time(NULL));
-    MatrixClass::set_allocations_debug(false);
+    MatrixClass::set_debug_options(MISC);
 
-    MatrixClass matrix = MatrixClass::create_matrix_random_int(DIAGONAL, 3, 3).set_name("matrix");
-    MatrixClass transpose = matrix.transpose();
-    MatrixClass bigger = matrix.resize(2, 2).set_name("resized");
+    Sle system = Sle::create_power_system(3);
 
-    float determinent = matrix.determinent();
+    std::cout << system << std::endl;
 
-    std::cout << "det(matrix)=" << determinent << std::endl;
+    system.gauss();
 
+    MatrixClass solutions = system.solve_upper_triangular().set_name("solutions");
+
+    std::cout << system << std::endl;
+
+    std::cout << solutions << std::endl;
+
+    std::cout << "program-end" << std::endl;
+
+    /*
     std::cout << matrix << std::endl;
-    std::cout << transpose << std::endl;
-    std::cout << bigger << std::endl;
 
+    auto [lower, upper] = matrix.lu_decomposition();
+
+    std::cout << lower << std::endl;
+    std::cout << upper << std::endl;
+    */
     return 0;
 }

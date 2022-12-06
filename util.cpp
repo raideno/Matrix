@@ -73,11 +73,15 @@ bool print_float(float number, size_t size, size_t precision, char padding, bool
 
     iPartDigits = count_digits((int)iPart);
 
+    // TODO: fix it
+
+    /*
     if (iPartDigits > size)
     {
         printf("\n[print_float]: ERROR\n");
         return false;
     }
+    */
 
     if (sign)
         printf("%c", number > 0 ? '+' : '-');
