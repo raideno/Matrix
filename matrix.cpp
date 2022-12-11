@@ -22,6 +22,7 @@ MatrixClass &MatrixClass::select_array(size_t *lines, size_t n_lines, size_t *co
 {
 }
 */
+
 void MatrixClass::set_debug_options(Debug debug)
 {
     MatrixClass::debug_options = debug;
@@ -38,7 +39,7 @@ void MatrixClass::set(size_t i, size_t j, float element)
 }
 
 // not sure it works
-MatrixClass &MatrixClass::select_lines_array(size_t *array, size_t size)
+MatrixClass *MatrixClass::select_lines_array(size_t *array, size_t size)
 {
     // check that matrix isn't null check that lines in array are valid, cehck that size isn't bigger than the number of lines
 
@@ -48,11 +49,11 @@ MatrixClass &MatrixClass::select_lines_array(size_t *array, size_t size)
         for (size_t j = 0; j < this->m; j++)
             (*result)[i][j] = (*this)[array[i]][j];
 
-    return *result;
+    return result;
 }
 
 // not sure it works
-MatrixClass &MatrixClass::select_columns_array(size_t *array, size_t size)
+MatrixClass *MatrixClass::select_columns_array(size_t *array, size_t size)
 {
     // check that matrix isn't null check that lines in array are valid, cehck that size isn't bigger than the number of lines
 
@@ -62,32 +63,32 @@ MatrixClass &MatrixClass::select_columns_array(size_t *array, size_t size)
         for (size_t j = 0; j < size; j++)
             (*result)[i][j] = (*this)[i][array[j]];
 
-    return *result;
+    return result;
 }
 
-MatrixClass &MatrixClass::select_array(size_t *lines, size_t n_lines, size_t *columns, size_t n_columns)
+MatrixClass *MatrixClass::select_array(size_t *lines, size_t n_lines, size_t *columns, size_t n_columns)
 {
     // do checks
 
     MatrixClass *temp;
     MatrixClass *result = NULL;
 
-    temp = &this->select_lines_array(lines, n_lines);
+    temp = this->select_lines_array(lines, n_lines);
 
-    result = &this->select_columns_array(columns, n_columns);
+    result = this->select_columns_array(columns, n_columns);
 
     // Todo: make sure temp is properly detroyed
     // destroy_matrix(temp);
 
-    return *result;
+    return result;
 }
 
-std::pair<MatrixClass &, MatrixClass &> MatrixClass::lu_decomposition()
+std::pair<MatrixClass &, MatrixClass &> MatrixClass::lu_decomposition(MatrixClass &matrix)
 {
     // check that matrix is square and compatible, det != 0
 
-    MatrixClass *u = &this->copy().set_name("upper");
-    MatrixClass *l = &(new MatrixClass(this->n, this->m))->set_name("lower"); // make it's diagonal ones
+    MatrixClass *u = matrix.copy()->set_name("upper");
+    MatrixClass *l = (new MatrixClass(matrix.n, matrix.m))->set_name("lower"); // make it's diagonal ones
 
     l->map(
         DIAGONAL, [](size_t i, size_t j, float element) -> float
@@ -101,14 +102,14 @@ std::pair<MatrixClass &, MatrixClass &> MatrixClass::lu_decomposition()
 
     // check if the system is solvable or not
 
-    for (size_t k = 0; k < this->n; k++) // to go through all the pivots
+    for (size_t k = 0; k < matrix.n; k++) // to go through all the pivots
     {
-        for (size_t i = k + 1; i < this->n; i++) // go though all the lines below the pivot to create zeros
+        for (size_t i = k + 1; i < matrix.n; i++) // go though all the lines below the pivot to create zeros
         {
             float a = (*u)[k][k];
             float b = (*u)[i][k];
             float factor = b / a;
-            for (size_t j = k; j < this->n; j++)
+            for (size_t j = k; j < matrix.n; j++)
             {
                 (*u)[i][j] = (*u)[i][j] - factor * (*u)[k][j];
                 (*l)[i][k] = factor;
@@ -120,15 +121,15 @@ std::pair<MatrixClass &, MatrixClass &> MatrixClass::lu_decomposition()
 }
 
 // should we remove the destructive option ?
-MatrixClass &MatrixClass::copy_matrix_in(MatrixClass &dest, MatrixClass &src, size_t startI, size_t startJ, bool destructive)
+MatrixClass *MatrixClass::copy_matrix_in(MatrixClass *dest, MatrixClass *src, size_t startI, size_t startJ, bool destructive)
 {
-    MatrixClass *result = destructive ? &dest : &dest.copy();
+    MatrixClass *result = destructive ? dest : dest->copy();
 
-    for (size_t i = startI; i < startI + src.n; i++)
-        for (size_t j = startJ; j < startJ + src.m; j++)
-            (*result)[i][j] = src[i - startI][j - startJ];
+    for (size_t i = startI; i < startI + src->n; i++)
+        for (size_t j = startJ; j < startJ + src->m; j++)
+            (*result)[i][j] = src->get(i - startI, j - startJ);
 
-    return *result;
+    return result;
 }
 
 std::pair<std::size_t, std::size_t> MatrixClass::size()
@@ -193,117 +194,117 @@ MatrixType MatrixClass::type()
     return NORMAL;
 }
 
-MatrixClass &MatrixClass::replace_lines(MatrixClass &matrixA, size_t Afrom, size_t Ato, MatrixClass &matrixB, size_t Bfrom, size_t Bto)
+MatrixClass *MatrixClass::replace_lines(MatrixClass *matrixA, size_t Afrom, size_t Ato, MatrixClass *matrixB, size_t Bfrom, size_t Bto)
 {
     MatrixClass *result;
     size_t size = Ato - Afrom + 1;
 
-    if (matrixA.m != matrixB.m)
+    if (matrixA->m != matrixB->m)
     {
         printf("[replace_lines]: the two matrices aren't compatible\n");
-        return *(new MatrixClass());
+        return new MatrixClass();
     }
 
-    if ((Ato - Afrom != Bto - Bfrom) || (Afrom > Ato || Bfrom > Bto) || (Afrom > matrixA.n - 1 || Bfrom > matrixB.n - 1 || Ato > matrixA.n - 1 || Bto > matrixB.n - 1))
+    if ((Ato - Afrom != Bto - Bfrom) || (Afrom > Ato || Bfrom > Bto) || (Afrom > matrixA->n - 1 || Bfrom > matrixB->n - 1 || Ato > matrixA->n - 1 || Bto > matrixB->n - 1))
     {
         printf("[replace_lines]: invalid params\n");
-        return *(new MatrixClass());
+        return new MatrixClass();
     }
 
-    result = &matrixA.copy();
+    result = matrixA->copy();
 
     for (size_t i = Bfrom; i < size; i++)
-        for (size_t j = 0; j < matrixA.m; j++)
-            (*result)[i - Bfrom + Afrom][j] = matrixB[i][j];
+        for (size_t j = 0; j < matrixA->m; j++)
+            (*result)[i - Bfrom + Afrom][j] = matrixB->get(i, j);
 
-    return *result;
+    return result;
 }
 
-MatrixClass &MatrixClass::replace_columns(MatrixClass &matrixA, size_t Afrom, size_t Ato, MatrixClass &matrixB, size_t Bfrom, size_t Bto)
+MatrixClass *MatrixClass::replace_columns(MatrixClass *matrixA, size_t Afrom, size_t Ato, MatrixClass *matrixB, size_t Bfrom, size_t Bto)
 {
     MatrixClass *result;
     size_t size = Ato - Afrom + 1;
 
-    if (matrixA.n != matrixB.n)
+    if (matrixA->n != matrixB->n)
     {
         printf("[replace_columns]: the two matrices aren't compatible\n");
-        return *(new MatrixClass());
+        return new MatrixClass();
     }
 
-    if ((Ato - Afrom != Bto - Bfrom) || (Afrom > Ato || Bfrom > Bto) || (Afrom > matrixA.m - 1 || Bfrom > matrixB.m - 1 || Ato > matrixA.m - 1 || Bto > matrixB.m - 1))
+    if ((Ato - Afrom != Bto - Bfrom) || (Afrom > Ato || Bfrom > Bto) || (Afrom > matrixA->m - 1 || Bfrom > matrixB->m - 1 || Ato > matrixA->m - 1 || Bto > matrixB->m - 1))
     {
         printf("[replace_columns]: invalid params\n");
-        return *(new MatrixClass());
+        return new MatrixClass();
     }
 
-    result = &matrixA.copy();
+    result = matrixA->copy();
 
-    for (size_t i = 0; i < matrixA.n; i++)
+    for (size_t i = 0; i < matrixA->n; i++)
         for (size_t j = Bfrom; j < size; j++)
-            (*result)[i][j - Bfrom + Afrom] = matrixB[i][j];
+            (*result)[i][j - Bfrom + Afrom] = matrixB->get(i, j);
 
-    return *result;
+    return result;
 }
 
-MatrixClass &MatrixClass::replace_lines_with(MatrixClass &matrixA, size_t Afrom, size_t Ato, float number)
+MatrixClass *MatrixClass::replace_lines_with(MatrixClass *matrixA, size_t Afrom, size_t Ato, float number)
 {
     MatrixClass *result;
 
-    if ((Afrom > Ato) || (Afrom > matrixA.n - 1 || Ato > matrixA.n - 1))
+    if ((Afrom > Ato) || (Afrom > matrixA->n - 1 || Ato > matrixA->n - 1))
     {
         printf("[replace_lines]: invalid params\n");
-        return *(new MatrixClass());
+        return new MatrixClass();
     }
 
-    result = &matrixA.copy();
+    result = matrixA->copy();
 
     for (size_t i = Ato; i <= Afrom; i++)
-        for (size_t j = 0; j < matrixA.m; j++)
+        for (size_t j = 0; j < matrixA->m; j++)
             (*result)[i][j] = number;
 
-    return *result;
+    return result;
 }
 
-MatrixClass &MatrixClass::replace_columns_with(MatrixClass &matrixA, size_t Afrom, size_t Ato, float number)
+MatrixClass *MatrixClass::replace_columns_with(MatrixClass *matrixA, size_t Afrom, size_t Ato, float number)
 {
     MatrixClass *result;
 
-    if ((Afrom > Ato) || (Afrom > matrixA.m - 1 || Ato > matrixA.m - 1))
+    if ((Afrom > Ato) || (Afrom > matrixA->m - 1 || Ato > matrixA->m - 1))
     {
         printf("[replace_columns]: invalid params\n");
-        return *(new MatrixClass());
+        return new MatrixClass();
     }
 
-    result = &matrixA.copy();
+    result = matrixA->copy();
 
-    for (size_t i = 0; i < matrixA.n; i++)
+    for (size_t i = 0; i < matrixA->n; i++)
         for (size_t j = Afrom; j <= Ato; j++)
             (*result)[i][j] = number;
 
-    return *result;
+    return result;
 }
 
-MatrixClass &MatrixClass::resize(size_t n, size_t m, bool inline_)
+MatrixClass *MatrixClass::resize(size_t n, size_t m, bool inline_)
 {
     // check that it's not negatif values
     if (inline_)
     {
-        MatrixClass save = this->copy().set_name("resize-save");
+        MatrixClass *save = this->copy()->set_name("resize-save");
 
-        MatrixClass::desallocate(*this);
+        MatrixClass::desallocate(this);
 
         this->allocate_matrix(n, m);
 
         for (size_t i = 0; i < std::min(this->n, n); i++)
             for (size_t j = 0; j < std::min(this->m, m); j++)
-                (*this)[i][j] = save[i][j];
+                (*this)[i][j] = save->get(i, j);
 
         this->n = n;
         this->m = m;
 
         // Todo: destroy save
 
-        return *this;
+        return this;
     }
     else
     {
@@ -313,7 +314,7 @@ MatrixClass &MatrixClass::resize(size_t n, size_t m, bool inline_)
             for (size_t j = 0; j < std::min(this->m, m); j++)
                 (*result)[i][j] = (*this)[i][j];
 
-        return *result;
+        return result;
     }
 }
 
@@ -327,26 +328,32 @@ void MatrixClass::desallocate_matrices(size_t n_args, ...)
     for (size_t i = 0; i < n_args; i++)
     {
         matrix = va_arg(ap, MatrixClass *);
-        MatrixClass::desallocate(*matrix);
+        MatrixClass::desallocate(matrix);
     }
 
     va_end(ap);
 }
 
-void MatrixClass::desallocate(MatrixClass &matrix)
+void MatrixClass::desallocate(MatrixClass *matrix)
 {
 
-    if (matrix.content == NULL)
+    if (matrix->content == NULL)
         return;
 
-    for (size_t i = 0; i < matrix.n; i++)
-        if (matrix.content[i] != NULL)
-            free(matrix.content[i]);
+    for (size_t i = 0; i < matrix->n; i++)
+        if (matrix->content[i] != NULL)
+            free(matrix->content[i]);
 
-    free(matrix.content);
+    free(matrix->content);
+
+    /*should remove it*/
+    matrix->content = NULL;
+    matrix->n = 0;
+    matrix->m = 0;
+    /*---*/
 
     if (MatrixClass::is_debug_option_set(Debug::MATRIX_DESALLOCATION))
-        printf(COLOR_RED "[MatrixClass-desallocate]:" COLOR_RESET "a matrix (%s) got desallocated\n", strlen(matrix.name) == 0 ? "/" : matrix.name);
+        printf(COLOR_RED "[MatrixClass-desallocate]:" COLOR_RESET "a matrix (%s) got desallocated\n", strlen(matrix->name) == 0 ? "/" : matrix->name);
 
     MatrixClass::desallocated_matrices++;
 
@@ -355,7 +362,7 @@ void MatrixClass::desallocate(MatrixClass &matrix)
     // free(this);
 }
 
-MatrixClass &MatrixClass::set_name(const char *name)
+MatrixClass *MatrixClass::set_name(const char *name)
 {
     for (size_t i = 0; i < 25; i++)
         this->name[i] = '\0';
@@ -363,13 +370,25 @@ MatrixClass &MatrixClass::set_name(const char *name)
     for (size_t i = 0; i < strlen(name); i++)
         this->name[i] = name[i];
 
-    return *this;
+    return this;
 }
 
 MatrixClass::~MatrixClass()
 {
+
+    if (MatrixClass::is_debug_option_set(Debug::MATRIX_DESTRUCTION))
+        printf(COLOR_RED "[~MatrixClass]:" COLOR_RESET "destroying a matrix (%s)\n", this->name);
+
+    printf(COLOR_YELLOW "[~MatrixClass]:" COLOR_RESET "%p %ld %ld(content, n, m)\n", this->content, this->n, this->m);
+
+    if (this->content == NULL)
+    {
+        printf(COLOR_BOLD_RED "[~MatrixClass]:" COLOR_RESET "matrix (%s) already got destroyed\n", this->name);
+        return;
+    }
+
     // clear allocation/content
-    MatrixClass::desallocate(*this);
+    MatrixClass::desallocate(this);
 
     this->n = 0;
     this->m = 0;
@@ -381,7 +400,7 @@ MatrixClass::~MatrixClass()
     MatrixClass::destroyed_matrices++;
 
     if (MatrixClass::is_debug_option_set(Debug::MISC))
-        printf(COLOR_YELLOW "[~MatrixClass-]:" COLOR_RESET "%ld, %ld, %ld, %ld (created, allocated, destroyed, desallocated)\n", MatrixClass::created_matrices, MatrixClass::allocated_matrices, MatrixClass::destroyed_matrices, MatrixClass::desallocated_matrices);
+        printf(COLOR_YELLOW "[~MatrixClass-]:" COLOR_RESET "%ld, " COLOR_BOLD_WHITE "%ld" COLOR_RESET ", %ld, " COLOR_BOLD_WHITE "%ld" COLOR_RESET "(created, allocated, destroyed, desallocated)\n", MatrixClass::created_matrices, MatrixClass::allocated_matrices, MatrixClass::destroyed_matrices, MatrixClass::desallocated_matrices);
 }
 
 // make the print check the max in the column and not in the entire matrix
@@ -526,45 +545,87 @@ float MatrixClass::get(size_t i, size_t j)
     return this->content[i][j];
 }
 
-MatrixClass &MatrixClass::operator+(MatrixClass &matrix)
+MatrixClass *MatrixClass::divide_matrix_matrix(MatrixClass *matrixA, MatrixClass *matrixB)
 {
-    return MatrixClass::add_matrix_matrix(*this, matrix);
+    MatrixClass *result;
+
+    if (matrixA->size() != matrixB->size())
+    {
+        printf("[divide_matrix_matrix]: matrices have to be of the same dimensions\n");
+        return new MatrixClass();
+    }
+
+    result = new MatrixClass(matrixA->n, matrixA->m);
+
+    result->map(
+        MatrixType::NORMAL, [&matrixA, &matrixB](size_t i, size_t j, float element) -> float
+        { return (matrixA->get(i, j) / matrixB->get(i, j)); },
+        true);
+
+    return result;
 }
 
-MatrixClass &MatrixClass::operator-(MatrixClass &matrix)
+MatrixClass *MatrixClass::multiply_matrix_matrix(MatrixClass *matrixA, MatrixClass *matrixB)
 {
-    return MatrixClass::subtract_matrix_matrix(*this, matrix);
+    MatrixClass *result;
+
+    if (matrixA->size() != matrixB->size())
+    {
+        printf("[multiply_matrix_matrix]: matrices have to be of the same dimensions\n");
+        return new MatrixClass();
+    }
+
+    result = new MatrixClass(matrixA->n, matrixA->m);
+
+    result->map(
+        MatrixType::NORMAL, [&matrixA, &matrixB](size_t i, size_t j, float element) -> float
+        { return matrixA->get(i, j) * matrixB->get(i, j); },
+        true);
+
+    return result;
 }
 
-MatrixClass &MatrixClass::operator*(MatrixClass &matrix)
+MatrixClass *MatrixClass::operator+(MatrixClass *matrix)
 {
-    return MatrixClass::multiply_matrix_with_matrix(*this, matrix);
+    return MatrixClass::add_matrix_matrix(this, matrix);
 }
 
-MatrixClass &MatrixClass::operator/(MatrixClass &matrix)
+MatrixClass *MatrixClass::operator-(MatrixClass *matrix)
 {
+    return MatrixClass::subtract_matrix_matrix(this, matrix);
 }
 
-MatrixClass &MatrixClass::operator+(float number)
+MatrixClass *MatrixClass::operator*(MatrixClass *matrix)
 {
-    return MatrixClass::add_matrix_with_float(*this, number);
+    return MatrixClass::multiply_matrix_matrix(this, matrix);
 }
 
-MatrixClass &MatrixClass::operator-(float number)
+MatrixClass *MatrixClass::operator/(MatrixClass *matrix)
 {
-    return MatrixClass::substract_matrix_with_float(*this, number);
+    return MatrixClass::divide_matrix_matrix(this, matrix);
 }
 
-MatrixClass &MatrixClass::operator*(float number)
+MatrixClass *MatrixClass::operator+(float number)
 {
-    return MatrixClass::multiply_matrix_with_float(*this, number);
+    return MatrixClass::add_matrix_float(this, number);
 }
 
-MatrixClass &MatrixClass::operator/(float number)
+MatrixClass *MatrixClass::operator-(float number)
 {
-    return MatrixClass::divide_matrix_with_float(*this, number);
+    return MatrixClass::substract_matrix_float(this, number);
 }
 
+MatrixClass *MatrixClass::operator*(float number)
+{
+    return MatrixClass::multiply_matrix_float(this, number);
+}
+
+MatrixClass *MatrixClass::operator/(float number)
+{
+    return MatrixClass::divide_matrix_float(this, number);
+}
+
+/*
 MatrixClass &MatrixClass::operator+=(float number)
 {
 }
@@ -580,13 +641,16 @@ MatrixClass &MatrixClass::operator*=(float number)
 MatrixClass &MatrixClass::operator-=(float number)
 {
 }
+*/
 
-MatrixClass &MatrixClass::operator++()
+MatrixClass *MatrixClass::operator++()
 {
+    return MatrixClass::add_matrix_float(this, 1);
 }
 
-MatrixClass &MatrixClass::operator--()
+MatrixClass *MatrixClass::operator--()
 {
+    return MatrixClass::substract_matrix_float(this, 1);
 }
 
 float *MatrixClass::operator[](size_t i)
@@ -702,10 +766,10 @@ size_t MatrixClass::min_column(size_t column, bool absolute)
 
 MatrixClass &MatrixClass::dot(MatrixClass &matrix)
 {
-    return MatrixClass::multiply_matrix_with_matrix(*this, matrix);
+    return MatrixClass::matrix_multiplication(*this, matrix);
 }
 
-MatrixClass &MatrixClass::multiply_matrix_with_matrix(MatrixClass &matrixA, MatrixClass &matrixB)
+MatrixClass &MatrixClass::matrix_multiplication(MatrixClass &matrixA, MatrixClass &matrixB)
 {
     MatrixClass *result;
 
@@ -761,10 +825,12 @@ float MatrixClass::determinent()
 
     for (size_t i = 0; i < this->n; i++)
     {
-        MatrixClass cofact = this->cofactor_of(0, i).set_name("cofactor-matrix");
+        MatrixClass *cofact = this->cofactor_of(0, i)->set_name("cofactor-matrix");
         /*0 in 0 + i in power fonction is for the j (i) but since we selected the first line*/
         /*should we let the "+1" or no ? or replace it with a "+1" ? and why exactly "+2" ? why it wouldn't work normaly ?*/
-        result += power(-1, 0 + i + 2) * (*this)[0][i] * cofact.determinent();
+        result += power(-1, 0 + i + 2) * (*this)[0][i] * cofact->determinent();
+
+        delete cofact;
         // TODO: fix the matrix destruction
         // delete &cofact;
         // destroy_matrix(cofact);
@@ -789,18 +855,18 @@ float MatrixClass::trace()
     return result;
 }
 
-MatrixClass &MatrixClass::select_lines(size_t start, size_t end)
+MatrixClass *MatrixClass::select_lines(size_t start, size_t end)
 {
     if (start > end)
     {
         printf("[select_lines]: start is bigger than end\n");
-        return (*new MatrixClass());
+        return new MatrixClass();
     }
 
     if (start > this->n - 1 || end > this->n - 1)
     {
         printf("[select_lines]: received invalid startLine or endLine\n");
-        return (*new MatrixClass());
+        return new MatrixClass();
     }
 
     size_t lines = end - start + 1;
@@ -810,23 +876,23 @@ MatrixClass &MatrixClass::select_lines(size_t start, size_t end)
         for (size_t j = 0; j < this->m; j++)
             (*result)[i - start][j] = (*this)[i][j];
 
-    return *result;
+    return result;
 }
 
-MatrixClass &MatrixClass::select_columns(size_t start, size_t end)
+MatrixClass *MatrixClass::select_columns(size_t start, size_t end)
 {
     // check that start < end
 
     if (start > end)
     {
         printf("[select_lines]: start is bigger than end\n");
-        return (*new MatrixClass());
+        return new MatrixClass();
     }
 
     if (start > this->m - 1 || end > this->m - 1)
     {
         printf("[select_columns]: received invalid startColumn or endColumn\n");
-        return (*new MatrixClass());
+        return new MatrixClass();
     }
 
     size_t columns = end - start + 1;
@@ -836,33 +902,33 @@ MatrixClass &MatrixClass::select_columns(size_t start, size_t end)
         for (size_t j = start; j <= end; j++)
             (*result)[i][j - start] = (*this)[i][j];
 
-    return *result;
+    return result;
 }
 
-MatrixClass &MatrixClass::select_(size_t startLine, size_t endLine, size_t startColumn, size_t endColumn)
+MatrixClass *MatrixClass::select_(size_t startLine, size_t endLine, size_t startColumn, size_t endColumn)
 {
-    MatrixClass temp;
-    MatrixClass result;
+    MatrixClass *temp;
+    MatrixClass *result;
 
     temp = this->select_lines(startLine, endLine);
 
-    result = temp.select_columns(startColumn, endColumn);
+    result = temp->select_columns(startColumn, endColumn);
 
     // TODO:
 
-    delete &temp;
+    delete temp;
     // destroy_matrix(temp);
 
     return result;
 }
 
-MatrixClass &MatrixClass::delete_lines(size_t start, size_t end)
+MatrixClass *MatrixClass::delete_lines(size_t start, size_t end)
 {
 
     if (start > this->n - 1 || end > this->n - 1)
     {
         printf("[delete_lines]: received invalid startLine or endLine\n");
-        return (*new MatrixClass());
+        return new MatrixClass();
     }
 
     size_t lines = this->n - (end - start + 1);
@@ -876,16 +942,16 @@ MatrixClass &MatrixClass::delete_lines(size_t start, size_t end)
         for (size_t j = 0; j < this->m; j++)
             (*result)[i - end][j] = (*this)[i][j];
 
-    return *result;
+    return result;
 }
 
-MatrixClass &MatrixClass::delete_columns(size_t start, size_t end)
+MatrixClass *MatrixClass::delete_columns(size_t start, size_t end)
 {
 
     if (start > this->m - 1 || end > this->m - 1)
     {
         printf("[delete_columns]: received invalid startColumn or endColumn\n");
-        return (*new MatrixClass());
+        return new MatrixClass();
     }
 
     size_t columns = this->m - (end - start + 1);
@@ -900,23 +966,23 @@ MatrixClass &MatrixClass::delete_columns(size_t start, size_t end)
             (*this)[i][j - end] = (*this)[i][j];
     }
 
-    return *result;
+    return result;
 }
 
-MatrixClass &MatrixClass::crop(size_t startLine, size_t endLine, size_t startColumn, size_t endColumn)
+MatrixClass *MatrixClass::crop(size_t startLine, size_t endLine, size_t startColumn, size_t endColumn)
 {
-    MatrixClass temp;
-    MatrixClass result;
+    MatrixClass *temp;
+    MatrixClass *result;
 
     temp = this->delete_lines(startLine, endLine);
 
     // printf("intermediare:\n");
     // print_matrix(temp);
 
-    result = temp.delete_columns(startColumn, endColumn);
+    result = temp->delete_columns(startColumn, endColumn);
 
     // TODO: fix the delete process
-    delete &temp;
+    delete temp;
 
     // destroy_matrix(temp);
 
@@ -1003,7 +1069,7 @@ void MatrixClass::read(MatrixType type)
 }
 
 // static
-MatrixClass &MatrixClass::concatenate_vertical(size_t n_args, ...)
+MatrixClass *MatrixClass::concatenate_vertical(size_t n_args, ...)
 {
     // if one of the params is NULL, or invalid we destroy the allocated matrice + print an error
     va_list ap;
@@ -1041,11 +1107,11 @@ MatrixClass &MatrixClass::concatenate_vertical(size_t n_args, ...)
         progress += matrices[k]->m;
     }
 
-    return *result;
+    return result;
 }
 
 /*static*/
-MatrixClass &MatrixClass::concatenate_horizontal(size_t n_args, ...)
+MatrixClass *MatrixClass::concatenate_horizontal(size_t n_args, ...)
 {
     // if one of the params is NULL, or invalid we destroy the allocated matrice + print an error
 
@@ -1084,7 +1150,7 @@ MatrixClass &MatrixClass::concatenate_horizontal(size_t n_args, ...)
         progress += matrices[k]->n;
     }
 
-    return *result;
+    return result;
 }
 
 bool MatrixClass::one(MatrixType type, BooleanProducer boolean_producer)
@@ -1147,58 +1213,54 @@ bool MatrixClass::column_all(size_t column, BooleanProducer boolean_producer)
     return true;
 }
 
-MatrixClass &MatrixClass::inverse(bool destructive)
+MatrixClass *MatrixClass::inverse(bool destructive)
 {
     float det;
-    MatrixClass result;
-    MatrixClass cofactor_matrix;
-    MatrixClass transpose_cofactor_matrix;
+    MatrixClass *result;
+    MatrixClass *cofactor_matrix;
+    MatrixClass *transpose_cofactor_matrix;
 
     det = this->determinent();
 
     if (det == 0)
     {
         printf("[inverse_matrix]: determinant is equal to 0\n");
-        return (*new MatrixClass());
+        return new MatrixClass();
     }
 
     cofactor_matrix = this->cofactor();
 
-    transpose_cofactor_matrix = cofactor_matrix.transpose();
+    transpose_cofactor_matrix = cofactor_matrix->transpose();
 
-    result = transpose_cofactor_matrix * (1 / det);
+    result = MatrixClass::multiply_matrix_float(transpose_cofactor_matrix, (1 / det));
 
-    // TODO: clean the remaining and unused matrices
-
-    /*
-    destroy_matrix(cofactor_matrix);
-    destroy_matrix(transpose_cofactor_matrix);
-    */
+    delete cofactor_matrix;
+    delete transpose_cofactor_matrix;
 
     return result;
 }
 
-MatrixClass &MatrixClass::transpose(bool destructive)
+MatrixClass *MatrixClass::transpose(bool destructive)
 {
     if (destructive)
     {
-        MatrixClass save = this->copy().set_name("save-for-transpose");
+        MatrixClass *save = this->copy()->set_name("save-for-transpose");
 
-        this->n = save.m;
-        this->m = save.n;
+        this->n = save->m;
+        this->m = save->n;
         // TODO: destroy the old matrice
 
-        MatrixClass::desallocate(*this);
+        MatrixClass::desallocate(this);
 
         this->content = allocate_matrix(this->n, this->m);
 
         for (size_t i = 0; i < this->n; i++)
             for (size_t j = 0; j < this->m; j++)
-                (*this)[j][i] = save[i][j];
+                (*this)[j][i] = save->get(i, j);
 
         // TODO: destroy the save matrice
 
-        return *this;
+        return this;
     }
     else
     {
@@ -1210,31 +1272,31 @@ MatrixClass &MatrixClass::transpose(bool destructive)
             for (size_t j = 0; j < this->m; j++)
                 (*result)[j][i] = (*this)[i][j];
 
-        return *result;
+        return result;
     }
 }
 
-MatrixClass &MatrixClass::cofactor()
+MatrixClass *MatrixClass::cofactor()
 {
     // TODO: check that matrix is a square matrix
 
-    MatrixClass result = *(new MatrixClass(this->n, this->m));
+    MatrixClass *result = new MatrixClass(this->n, this->m);
 
     for (size_t i = 0; i < this->n; i++)
     {
         for (size_t j = 0; j < this->n; j++)
         {
-            MatrixClass cofact = this->cofactor_of(i, j);
-            float det_cofact = cofact.determinent();
-            result[i][j] = power(-1, i + 1 + j + 1) * det_cofact;
-            delete &cofact;
+            MatrixClass *cofact = this->cofactor_of(i, j);
+            float det_cofact = cofact->determinent();
+            (*result)[i][j] = power(-1, i + 1 + j + 1) * det_cofact;
+            delete cofact;
         }
     }
 
     return result;
 }
 
-MatrixClass &MatrixClass::cofactor_of(size_t line, size_t column)
+MatrixClass *MatrixClass::cofactor_of(size_t line, size_t column)
 {
     int k = 0;
     float *array;
@@ -1256,11 +1318,11 @@ MatrixClass &MatrixClass::cofactor_of(size_t line, size_t column)
         }
     }
 
-    result = &MatrixClass::matrix_from_array(NORMAL, array, this->n - 1, this->m - 1);
+    result = MatrixClass::matrix_from_array(NORMAL, array, this->n - 1, this->m - 1);
 
     free(array);
 
-    return *result;
+    return result;
 }
 
 MatrixClass::MatrixClass()
@@ -1275,43 +1337,42 @@ MatrixClass::MatrixClass()
     MatrixClass::created_matrices++;
 }
 
-MatrixClass &MatrixClass::permute_lines(size_t L1, size_t L2, bool destructive)
+MatrixClass *MatrixClass::permute_lines(size_t L1, size_t L2, bool destructive)
 {
     float temp;
-    MatrixClass result = destructive ? *this : this->copy();
+    MatrixClass *result = destructive ? this : this->copy();
 
-    for (size_t j = 0; j < result.m; j++)
+    for (size_t j = 0; j < result->m; j++)
     {
-        temp = result[L1][j];
-        result[L1][j] = result[L2][j];
-        result[L2][j] = temp;
+        temp = (*result)[L1][j];
+        (*result)[L1][j] = (*result)[L2][j];
+        (*result)[L2][j] = temp;
     }
 
     return result;
 }
 
-MatrixClass &MatrixClass::permute_columns(size_t C1, size_t C2, bool destructive)
+MatrixClass *MatrixClass::permute_columns(size_t C1, size_t C2, bool destructive)
 {
     float temp;
-    MatrixClass result = destructive ? *this : this->copy();
+    MatrixClass *result = destructive ? this : this->copy();
 
-    for (size_t i = 0; i < result.n; i++)
+    for (size_t i = 0; i < result->n; i++)
     {
-        temp = result[i][C1];
-        result[i][C1] = result[i][C2];
-        result[i][C2] = temp;
+        temp = (*result)[i][C1];
+        (*result)[i][C1] = (*result)[i][C2];
+        (*result)[i][C2] = temp;
     }
 
     return result;
 }
 
-MatrixClass &MatrixClass::create_matrix(size_t n, size_t m)
+MatrixClass *MatrixClass::create_matrix(size_t n, size_t m)
 {
-    MatrixClass *matrix = new MatrixClass(n, m);
-    return *matrix;
+    return new MatrixClass(n, m);
 }
 
-MatrixClass &MatrixClass::matrix_from_array(MatrixType type, float *array, size_t n, size_t m)
+MatrixClass *MatrixClass::matrix_from_array(MatrixType type, float *array, size_t n, size_t m)
 {
     int counter = 0;
     MatrixClass *matrix = new MatrixClass(n, m);
@@ -1323,10 +1384,10 @@ MatrixClass &MatrixClass::matrix_from_array(MatrixType type, float *array, size_
         { return array[counter++]; },
         true);
 
-    return *matrix;
+    return matrix;
 }
 
-MatrixClass &MatrixClass::create_matrix_with(MatrixType type, size_t n, size_t m, float number)
+MatrixClass *MatrixClass::create_matrix_with(MatrixType type, size_t n, size_t m, float number)
 {
     MatrixClass *matrix = new MatrixClass(n, m);
 
@@ -1335,10 +1396,10 @@ MatrixClass &MatrixClass::create_matrix_with(MatrixType type, size_t n, size_t m
         { return number; },
         true);
 
-    return *matrix;
+    return matrix;
 }
 
-MatrixClass &MatrixClass::create_matrix_random_int(MatrixType type, size_t n, size_t m, int min, int max)
+MatrixClass *MatrixClass::create_matrix_random_int(MatrixType type, size_t n, size_t m, int min, int max)
 {
     MatrixClass *matrix = new MatrixClass(n, m);
 
@@ -1347,10 +1408,10 @@ MatrixClass &MatrixClass::create_matrix_random_int(MatrixType type, size_t n, si
         { return (float)random_integer(min, max); },
         true);
 
-    return *matrix;
+    return matrix;
 }
 
-MatrixClass &create_matrix_random_float(MatrixType type, size_t n, size_t m, float min, float max)
+MatrixClass *MatrixClass::create_matrix_random_float(MatrixType type, size_t n, size_t m, float min, float max)
 {
     MatrixClass *matrix = new MatrixClass(n, m);
 
@@ -1359,7 +1420,7 @@ MatrixClass &create_matrix_random_float(MatrixType type, size_t n, size_t m, flo
         { return random_float(min, max); },
         true);
 
-    return *matrix;
+    return matrix;
 }
 
 MatrixClass::MatrixClass(size_t n, size_t m)
@@ -1400,21 +1461,21 @@ float **MatrixClass::allocate_matrix(size_t n, size_t m)
     return result;
 }
 
-MatrixClass &MatrixClass::copy()
+MatrixClass *MatrixClass::copy()
 {
-    return MatrixClass::copy(*this);
+    return MatrixClass::copy(this);
 }
 
-MatrixClass &MatrixClass::copy(MatrixClass &matrix)
+MatrixClass *MatrixClass::copy(MatrixClass *matrix)
 {
-    MatrixClass *result = new MatrixClass(matrix.n, matrix.m);
+    MatrixClass *result = new MatrixClass(matrix->n, matrix->m);
 
     result->map(
         NORMAL, [&matrix](size_t i, size_t j, float element) -> float
-        { return matrix[i][j]; },
+        { return matrix->get(i, j); },
         true);
 
-    return *result;
+    return result;
 }
 
 /*static*/ void MatrixClass::srand(unsigned int seed)
@@ -1422,73 +1483,73 @@ MatrixClass &MatrixClass::copy(MatrixClass &matrix)
     std::srand(seed);
 }
 
-/*static*/ MatrixClass &MatrixClass::add_matrix_matrix(MatrixClass &matrixA, MatrixClass &matrixB)
+/*static*/ MatrixClass *MatrixClass::add_matrix_matrix(MatrixClass *matrixA, MatrixClass *matrixB)
 {
-    MatrixClass *result = new MatrixClass(matrixA.n, matrixA.m);
+    MatrixClass *result = new MatrixClass(matrixA->n, matrixA->m);
 
     // TODO: check that matriceA and matriceB are of the same dimensions
 
     result->map(
         NORMAL, [&matrixA, &matrixB](size_t i, size_t j, float element) -> float
-        { return matrixA[i][j] + matrixB[i][j]; },
+        { return matrixA->get(i, j) + matrixB->get(i, j); },
         true);
 
-    return *result;
+    return result;
 }
 
-/*static*/ MatrixClass &MatrixClass::subtract_matrix_matrix(MatrixClass &matrixA, MatrixClass &matrixB)
+/*static*/ MatrixClass *MatrixClass::subtract_matrix_matrix(MatrixClass *matrixA, MatrixClass *matrixB)
 {
-    MatrixClass *result = new MatrixClass(matrixA.n, matrixA.m);
+    MatrixClass *result = new MatrixClass(matrixA->n, matrixA->m);
 
     // TODO: check that matriceA and matriceB are of the same dimensions
 
     result->map(
         NORMAL, [&matrixA, &matrixB](size_t i, size_t j, float element) -> float
-        { return matrixA[i][j] - matrixB[i][j]; },
+        { return matrixA->get(i, j) - matrixB->get(i, j); },
         true);
 
-    return *result;
+    return result;
 }
 
-/*static*/ MatrixClass &MatrixClass::add_matrix_with_float(MatrixClass &matrix, float a)
+/*static*/ MatrixClass *MatrixClass::add_matrix_float(MatrixClass *matrix, float a)
 {
-    MatrixClass *result = new MatrixClass(matrix.n, matrix.m);
+    MatrixClass *result = new MatrixClass(matrix->n, matrix->m);
 
     result->map(
         NORMAL, [&matrix, &a](size_t i, size_t j, float element) -> float
-        { return matrix[i][j] - a; },
+        { return matrix->get(i, j) + a; },
         true);
 
-    return *result;
+    return result;
 }
 
-/*static*/ MatrixClass &MatrixClass::substract_matrix_with_float(MatrixClass &matrix, float a)
+/*static*/ MatrixClass *MatrixClass::substract_matrix_float(MatrixClass *matrix, float a)
 {
-    return add_matrix_with_float(matrix, -a);
+    return add_matrix_float(matrix, -a);
 }
 
-/*static*/ MatrixClass &MatrixClass::multiply_matrix_with_float(MatrixClass &matrix, float a)
+/*static*/ MatrixClass *MatrixClass::multiply_matrix_float(MatrixClass *matrix, float a)
 {
-    MatrixClass *result = new MatrixClass(matrix.n, matrix.m);
+    MatrixClass *result = new MatrixClass(matrix->n, matrix->m);
 
     result->map(
         NORMAL, [&matrix, &a](size_t i, size_t j, float element) -> float
-        { return matrix[i][j] * a; },
+        { return matrix->get(i, j) * a; },
         true);
 
-    return *result;
+    return result;
 }
 
-/*static*/ MatrixClass &MatrixClass::divide_matrix_with_float(MatrixClass &matrix, float a)
+/*static*/ MatrixClass *MatrixClass::divide_matrix_float(MatrixClass *matrix, float a)
 {
-    MatrixClass *result = new MatrixClass(matrix.n, matrix.m);
+    MatrixClass *result = new MatrixClass(matrix->n, matrix->m);
 
     result->map(
         NORMAL, [&matrix, &a](size_t i, size_t j, float element) -> float
-        { return matrix[i][j] / a; },
+        { return matrix->get(i, j) / a; },
         true);
 
-    return *result;
+    return result;
 }
 
 void MatrixClass::for_each(MatrixType type, Consumer consumer)
@@ -1541,14 +1602,14 @@ void MatrixClass::for_each_column(size_t column, Consumer consumer)
         consumer(i, column, (*this)[i][column]);
 }
 
-MatrixClass &MatrixClass::map(MatrixType type, Producer producer, bool inplace)
+MatrixClass *MatrixClass::map(MatrixType type, Producer producer, bool inplace)
 {
     MatrixClass *result;
 
     if ((type == DIAGONAL || type == UPPER_TRIANGLE || type == LOWER_TRIANGLE) && !this->is_square())
     {
         printf("[matrix_better_map]: matrix must be a square matrix for this type\n");
-        return *(new MatrixClass());
+        return new MatrixClass();
     }
 
     result = inplace ? this : new MatrixClass(this->n, this->m);
@@ -1580,24 +1641,24 @@ MatrixClass &MatrixClass::map(MatrixType type, Producer producer, bool inplace)
         break;
     }
 
-    return *result;
+    return result;
 }
-MatrixClass &MatrixClass::map_line(size_t line, Producer producer, bool inplace)
+MatrixClass *MatrixClass::map_line(size_t line, Producer producer, bool inplace)
 {
     MatrixClass *result = inplace ? this : new MatrixClass(this->n, this->m);
 
     for (size_t j = 0; j < this->m; j++)
         (*result)[line][j] = producer(line, j, (*this)[line][j]);
 
-    return *result;
+    return result;
 }
 
-MatrixClass &MatrixClass::map_column(size_t column, Producer producer, bool inplace)
+MatrixClass *MatrixClass::map_column(size_t column, Producer producer, bool inplace)
 {
     MatrixClass *result = inplace ? this : new MatrixClass(this->n, this->m);
 
     for (size_t i = 0; i < this->n; i++)
         (*result)[i][column] = producer(i, column, (*this)[i][column]);
 
-    return *result;
+    return result;
 }

@@ -6,27 +6,34 @@
 #include "util.hpp"
 #include "matrix.hpp"
 
-float matrix_array[] = {1, 6, 9, 2, 1, 2, 3, 6, 9};
-float vector_array[] = {1, 2, 3};
+std::size_t order = 3;
+float vector_array[] = {9, 1, 0};
+float matrix_array[] = {1, 1, 2, 2, 4, -3, 3, 6, -5};
 
 int main()
 {
-    MatrixClass::srand(time(NULL));
+    MatrixClass::srand(45);
     MatrixClass::set_debug_options(Debug::ALL);
 
-    Sle system = Sle::create_power_system(3);
+    std::cout << "start-program" << std::endl;
 
-    std::cout << system << std::endl;
+    MatrixClass *matrix = MatrixClass::matrix_from_array(NORMAL, matrix_array, order, order)->set_name("matrix-original");
+    MatrixClass *vector = MatrixClass::matrix_from_array(NORMAL, vector_array, order, 1)->set_name("vector-original");
 
-    system.gauss();
+    Sle *system = new Sle(matrix, vector);
 
-    MatrixClass solutions = system.solve_upper_triangular().set_name("solutions");
+    // auto [l, u] = MatrixClass::lu_decomposition(system->matrix);
 
-    std::cout << system << std::endl;
+    system->gauss_jordan(true)->solve_upper_triangular()->set_name("solutions")->print();
+    printf("\n");
 
-    std::cout << solutions << std::endl;
+    system->print();
 
-    std::cout << "program-end" << std::endl;
+    delete system;
+    delete matrix;
+    delete vector;
 
-      return 0;
+    std::cout << "end-program" << std::endl;
+
+    return 0;
 }
