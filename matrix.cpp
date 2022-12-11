@@ -23,12 +23,12 @@ MatrixClass &MatrixClass::select_array(size_t *lines, size_t n_lines, size_t *co
 }
 */
 
-void MatrixClass::set_debug_options(Debug debug)
+void MatrixClass::set_debug_options(MatrixDebug debug)
 {
     MatrixClass::debug_options = debug;
 }
 
-bool MatrixClass::is_debug_option_set(Debug debug_option)
+bool MatrixClass::is_debug_option_set(MatrixDebug debug_option)
 {
     return (MatrixClass::debug_options & debug_option) == debug_option;
 }
@@ -352,8 +352,8 @@ void MatrixClass::desallocate(MatrixClass *matrix)
     matrix->m = 0;
     /*---*/
 
-    if (MatrixClass::is_debug_option_set(Debug::MATRIX_DESALLOCATION))
-        printf(COLOR_RED "[MatrixClass-desallocate]:" COLOR_RESET "a matrix (%s) got desallocated\n", strlen(matrix->name) == 0 ? "/" : matrix->name);
+    if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_DESALLOCATION))
+        printf(COLOR_RED "[MatrixClass-desallocate]:" COLOR_RESET "a matrix " COLOR_UNDERLINE "(%s)" COLOR_RESET " got desallocated\n", matrix->name.length() == 0 ? "/" : matrix->name.c_str());
 
     MatrixClass::desallocated_matrices++;
 
@@ -362,44 +362,45 @@ void MatrixClass::desallocate(MatrixClass *matrix)
     // free(this);
 }
 
-MatrixClass *MatrixClass::set_name(const char *name)
+MatrixClass *MatrixClass::set_name(const std::string &name)
 {
-    for (size_t i = 0; i < 25; i++)
-        this->name[i] = '\0';
-
-    for (size_t i = 0; i < strlen(name); i++)
-        this->name[i] = name[i];
+    this->name = name;
 
     return this;
 }
 
 MatrixClass::~MatrixClass()
 {
+    /*
+        if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_DESTRUCTION))
+            printf(COLOR_RED "[~MatrixClass]:" COLOR_RESET "destroying a matrix " COLOR_UNDERLINE "(%s)" COLOR_RESET "\n", this->name.c_str());
+    */
 
-    if (MatrixClass::is_debug_option_set(Debug::MATRIX_DESTRUCTION))
-        printf(COLOR_RED "[~MatrixClass]:" COLOR_RESET "destroying a matrix (%s)\n", this->name);
-
-    printf(COLOR_YELLOW "[~MatrixClass]:" COLOR_RESET "%p %ld %ld(content, n, m)\n", this->content, this->n, this->m);
+    /*
+    if (MatrixClass::is_debug_option_set(MatrixDebug::MISC))
+        printf(COLOR_YELLOW "[~MatrixClass]:" COLOR_RESET "%p %ld %ld(content, n, m)\n", this->content, this->n, this->m);
+    */
 
     if (this->content == NULL)
     {
-        printf(COLOR_BOLD_RED "[~MatrixClass]:" COLOR_RESET "matrix (%s) already got destroyed\n", this->name);
+        printf(COLOR_BOLD_RED "[~MatrixClass]:" COLOR_RESET "matrix " COLOR_UNDERLINE "(%s)" COLOR_RESET " already got destroyed\n", this->name.c_str());
+        this->n = 0;
+        this->m = 0;
         return;
     }
 
-    // clear allocation/content
     MatrixClass::desallocate(this);
 
     this->n = 0;
     this->m = 0;
     this->content = NULL;
 
-    if (MatrixClass::is_debug_option_set(Debug::MATRIX_DESTRUCTION))
-        printf(COLOR_RED "[~MatrixClass]:" COLOR_RESET "a matrix (%s) got destroyed\n", strlen(this->name) == 0 ? "/" : this->name);
+    if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_DESTRUCTION))
+        printf(COLOR_RED "[~MatrixClass]:" COLOR_RESET "a matrix " COLOR_UNDERLINE "(%s)" COLOR_RESET " got destroyed\n", this->name.length() == 0 ? "/" : this->name.c_str());
 
     MatrixClass::destroyed_matrices++;
 
-    if (MatrixClass::is_debug_option_set(Debug::MISC))
+    if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_MISC))
         printf(COLOR_YELLOW "[~MatrixClass-]:" COLOR_RESET "%ld, " COLOR_BOLD_WHITE "%ld" COLOR_RESET ", %ld, " COLOR_BOLD_WHITE "%ld" COLOR_RESET "(created, allocated, destroyed, desallocated)\n", MatrixClass::created_matrices, MatrixClass::allocated_matrices, MatrixClass::destroyed_matrices, MatrixClass::desallocated_matrices);
 }
 
@@ -409,8 +410,8 @@ void MatrixClass::print(size_t precision, bool sign)
     size_t size;
     std::pair<size_t, size_t> max;
 
-    if (strlen(this->name) > 0)
-        printf("%s:\n", this->name);
+    if (this->name.length() > 0)
+        std::cout << this->name << ":" << std::endl;
 
     max = this->max(NORMAL);
     size = count_digits(this->get(max.first, max.second));
@@ -426,7 +427,7 @@ void MatrixClass::print(size_t precision, bool sign)
         }
         printf("]\n");
     }
-    printf("]");
+    printf("]\n");
 }
 
 void MatrixClass::print_line(size_t line, size_t precision, bool sign)
@@ -1068,7 +1069,6 @@ void MatrixClass::read(MatrixType type)
         true);
 }
 
-// static
 MatrixClass *MatrixClass::concatenate_vertical(size_t n_args, ...)
 {
     // if one of the params is NULL, or invalid we destroy the allocated matrice + print an error
@@ -1110,7 +1110,6 @@ MatrixClass *MatrixClass::concatenate_vertical(size_t n_args, ...)
     return result;
 }
 
-/*static*/
 MatrixClass *MatrixClass::concatenate_horizontal(size_t n_args, ...)
 {
     // if one of the params is NULL, or invalid we destroy the allocated matrice + print an error
@@ -1331,7 +1330,7 @@ MatrixClass::MatrixClass()
     this->n = 0;
     this->content = NULL;
 
-    if (MatrixClass::is_debug_option_set(Debug::MATRIX_CREATION))
+    if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_CREATION))
         printf(COLOR_GREEN "[MatrixClass]:" COLOR_RESET "empty matrix got created\n");
 
     MatrixClass::created_matrices++;
@@ -1432,7 +1431,7 @@ MatrixClass::MatrixClass(size_t n, size_t m)
     this->m = m;
     this->content = this->allocate_matrix(n, m);
 
-    if (MatrixClass::is_debug_option_set(Debug::MATRIX_CREATION))
+    if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_CREATION))
         printf(COLOR_GREEN "[MatrixClass]:" COLOR_RESET "matrix got created\n");
 }
 
@@ -1453,7 +1452,7 @@ float **MatrixClass::allocate_matrix(size_t n, size_t m)
         }
     }
 
-    if (MatrixClass::is_debug_option_set(Debug::MATRIX_ALLOCATION))
+    if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_ALLOCATION))
         printf(COLOR_GREEN "[MatrixClass-allocate_matrix]:" COLOR_RESET "matrix-content allocation has been made\n");
 
     MatrixClass::allocated_matrices++;
@@ -1478,12 +1477,12 @@ MatrixClass *MatrixClass::copy(MatrixClass *matrix)
     return result;
 }
 
-/*static*/ void MatrixClass::srand(unsigned int seed)
+void MatrixClass::srand(unsigned int seed)
 {
-    std::srand(seed);
+    MatrixClass::seed = seed;
 }
 
-/*static*/ MatrixClass *MatrixClass::add_matrix_matrix(MatrixClass *matrixA, MatrixClass *matrixB)
+MatrixClass *MatrixClass::add_matrix_matrix(MatrixClass *matrixA, MatrixClass *matrixB)
 {
     MatrixClass *result = new MatrixClass(matrixA->n, matrixA->m);
 
@@ -1497,7 +1496,7 @@ MatrixClass *MatrixClass::copy(MatrixClass *matrix)
     return result;
 }
 
-/*static*/ MatrixClass *MatrixClass::subtract_matrix_matrix(MatrixClass *matrixA, MatrixClass *matrixB)
+MatrixClass *MatrixClass::subtract_matrix_matrix(MatrixClass *matrixA, MatrixClass *matrixB)
 {
     MatrixClass *result = new MatrixClass(matrixA->n, matrixA->m);
 
@@ -1511,7 +1510,7 @@ MatrixClass *MatrixClass::copy(MatrixClass *matrix)
     return result;
 }
 
-/*static*/ MatrixClass *MatrixClass::add_matrix_float(MatrixClass *matrix, float a)
+MatrixClass *MatrixClass::add_matrix_float(MatrixClass *matrix, float a)
 {
     MatrixClass *result = new MatrixClass(matrix->n, matrix->m);
 
@@ -1523,12 +1522,12 @@ MatrixClass *MatrixClass::copy(MatrixClass *matrix)
     return result;
 }
 
-/*static*/ MatrixClass *MatrixClass::substract_matrix_float(MatrixClass *matrix, float a)
+MatrixClass *MatrixClass::substract_matrix_float(MatrixClass *matrix, float a)
 {
     return add_matrix_float(matrix, -a);
 }
 
-/*static*/ MatrixClass *MatrixClass::multiply_matrix_float(MatrixClass *matrix, float a)
+MatrixClass *MatrixClass::multiply_matrix_float(MatrixClass *matrix, float a)
 {
     MatrixClass *result = new MatrixClass(matrix->n, matrix->m);
 
@@ -1540,7 +1539,7 @@ MatrixClass *MatrixClass::copy(MatrixClass *matrix)
     return result;
 }
 
-/*static*/ MatrixClass *MatrixClass::divide_matrix_float(MatrixClass *matrix, float a)
+MatrixClass *MatrixClass::divide_matrix_float(MatrixClass *matrix, float a)
 {
     MatrixClass *result = new MatrixClass(matrix->n, matrix->m);
 

@@ -24,15 +24,15 @@ enum MatrixType
 };
 typedef enum MatrixType MatrixType;
 
-enum Debug
+enum MatrixDebug
 {
-    NONE = 1,
+    MATRIX_NONE = 1,
     MATRIX_CREATION = 2,
     MATRIX_ALLOCATION = 4,
     MATRIX_DESTRUCTION = 8,
     MATRIX_DESALLOCATION = 16,
-    MISC = 32,
-    ALL = MATRIX_CREATION | MATRIX_ALLOCATION | MATRIX_DESTRUCTION | MATRIX_DESALLOCATION | MISC,
+    MATRIX_MISC = 32,
+    MATRIX_ALL = MATRIX_CREATION | MATRIX_ALLOCATION | MATRIX_DESTRUCTION | MATRIX_DESALLOCATION | MATRIX_MISC,
 };
 
 typedef const std::function<void(size_t, size_t, float)> &Consumer;
@@ -45,12 +45,15 @@ class MatrixClass
 {
 
 private:
-    char name[25];
     float **content;
+
+    std::string id;
+    std::string name;
     std::size_t n, m;
     std::size_t start_line, start_column;
 
-    inline static Debug debug_options = NONE;
+    inline static unsigned int seed = 45;
+    inline static MatrixDebug debug_options = MatrixDebug::MATRIX_NONE;
 
     inline static std::size_t allocated_matrices = 0;
     inline static std::size_t desallocated_matrices = 0;
@@ -69,8 +72,8 @@ public:
 
     static void srand(unsigned int seed);
 
-    static void set_debug_options(Debug debug);
-    static bool is_debug_option_set(Debug debug_option);
+    static void set_debug_options(MatrixDebug debug);
+    static bool is_debug_option_set(MatrixDebug debug_option);
 
     MatrixClass();
     MatrixClass(size_t n, size_t m);
@@ -89,7 +92,7 @@ public:
     float get(size_t i, size_t j);
     void set(size_t i, size_t j, float element);
 
-    MatrixClass *set_name(const char *name);
+    MatrixClass *set_name(const std::string &name);
 
     std::pair<std::size_t, std::size_t> size();
 

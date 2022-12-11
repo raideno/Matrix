@@ -22,8 +22,8 @@
 #define COLOR_BOLD_WHITE "\033[1m\033[37m"
 #define COLOR_UNDERLINE "\033[4m"
 
-int random_integer(int min = 0, int max = 10);
-float random_float(float min = 0, float max = 1);
+int random_integer(int min = 0, int max = 10, unsigned int seed = 45);
+float random_float(float min = 0, float max = 1, unsigned int seed = 45);
 
 int prompt(const char *string);
 

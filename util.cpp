@@ -3,13 +3,13 @@
 
 #include "util.hpp"
 
-float random_float(float min, float max)
+float random_float(float min, float max, unsigned int seed)
 {
     float scale = rand() / (float)RAND_MAX; /* [0, 1.0] */
     return min + scale * (max - min);
 }
 
-int random_integer(int min, int max)
+int random_integer(int min, int max, unsigned int seed)
 {
     return (rand() % (max - min)) + min;
 }

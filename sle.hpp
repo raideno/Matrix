@@ -3,13 +3,36 @@
 
 #include "matrix.hpp"
 
+enum SystemDebug
+{
+    SYSTEM_NONE = 1,
+    SYSTEM_CREATION = 2,
+    SYSTEM_ALLOCATION = 4,
+    SYSTEM_DESTRUCTION = 8,
+    SYSTEM_DESALLOCATION = 16,
+    SYSTEM_MISC = 32,
+    SYSTEM_ALL = SYSTEM_CREATION | SYSTEM_ALLOCATION | SYSTEM_DESTRUCTION | SYSTEM_DESALLOCATION | SYSTEM_MISC
+};
+typedef SystemDebug SystemDebug;
+
 class Sle
 {
 private:
+    std::string id;
+
+    inline static unsigned int seed = 45;
+    inline static SystemDebug debug_options = SystemDebug::SYSTEM_NONE;
+
 public:
+    std::string name;
     std::size_t order;
     MatrixClass *matrix;
     MatrixClass *vector;
+
+    static void srand(unsigned int seed);
+
+    static void set_debug_options(SystemDebug debug);
+    static bool is_debug_option_set(SystemDebug debug_option);
 
     Sle();
     Sle(std::size_t order);
@@ -17,6 +40,8 @@ public:
     Sle(MatrixClass *matrix, MatrixClass *vector);
 
     ~Sle();
+
+    Sle *set_name(const std::string &name);
 
     void read(); /*implement it*/
     void print();

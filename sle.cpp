@@ -43,6 +43,28 @@ Sle::~Sle()
     delete this->vector;
 }
 
+void Sle::set_debug_options(SystemDebug debug)
+{
+    Sle::debug_options = debug;
+}
+
+bool Sle::is_debug_option_set(SystemDebug debug_option)
+{
+    return (Sle::debug_options & debug_option) == debug_option;
+}
+
+void Sle::srand(unsigned int seed)
+{
+    Sle::seed = seed;
+}
+
+Sle *Sle::set_name(const std::string &name)
+{
+    this->name = name;
+
+    return this;
+}
+
 Sle *Sle::copy()
 {
     MatrixClass *matrix = this->matrix->copy();
@@ -75,6 +97,9 @@ Sle *Sle::create_random_float_system(std::size_t order, float min, float max)
 
 void Sle::print()
 {
+    if (this->name.length() > 0)
+        std::cout << this->name + ":" << std::endl;
+
     MatrixClass::print_matrices_concatenation(2, this->matrix, this->vector);
 }
 
