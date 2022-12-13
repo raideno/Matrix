@@ -1170,6 +1170,40 @@ bool MatrixClass::one(MatrixType type, BooleanProducer boolean_producer)
     return result;
 }
 
+float MatrixClass::reduce(MatrixType type, Reducer reducer, float initialValue)
+{
+    float result = initialValue;
+
+    std::cout << result << std::endl;
+
+    this->for_each(type, [&reducer, &result](size_t i, size_t j, float value) -> void
+                   { result = reducer(result, i, j, value); });
+
+    std::cout << result << std::endl;
+
+    return result;
+}
+
+float MatrixClass::reduce_line(size_t line, Reducer reducer, float initialValue)
+{
+    float result = initialValue;
+
+    this->for_each_line(line, [&reducer, &result](size_t i, size_t j, float value) -> void
+                        { result += reducer(result, i, j, value); });
+
+    return result;
+}
+
+float MatrixClass::reduce_column(size_t column, Reducer reducer, float initialValue)
+{
+    float result = initialValue;
+
+    this->for_each_column(column, [&reducer, &result](size_t i, size_t j, float value) -> void
+                          { result += reducer(result, i, j, value); });
+
+    return result;
+}
+
 bool MatrixClass::line_one(size_t line, BooleanProducer boolean_producer)
 {
     for (size_t j = 0; j < this->m; j++)

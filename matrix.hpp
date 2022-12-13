@@ -42,9 +42,10 @@ enum MatrixDebug
     MATRIX_ALL = MATRIX_CREATION | MATRIX_ALLOCATION | MATRIX_DESTRUCTION | MATRIX_DESALLOCATION | MATRIX_MISC,
 };
 
-typedef const std::function<void(size_t, size_t, float)> &Consumer;
-typedef const std::function<float(size_t, size_t, float)> &Producer;
-typedef const std::function<bool(size_t, size_t, float)> &BooleanProducer;
+typedef const std::function<void(size_t i, size_t j, float value)> &Consumer;
+typedef const std::function<float(float acumulator, size_t i, size_t j, float value)> &Reducer;
+typedef const std::function<float(size_t i, size_t j, float value)> &Producer;
+typedef const std::function<bool(size_t i, size_t j, float value)> &BooleanProducer;
 
 /*row and column operations*/
 
@@ -122,13 +123,9 @@ public:
     MatrixClass *map_line(size_t line, Producer consumer, bool inplace = false);
     MatrixClass *map_column(size_t column, Producer consumer, bool inplace = false);
 
-    MatrixClass *permute_lines(size_t L1, size_t L2, bool destructive = false);
-    MatrixClass *permute_columns(size_t C1, size_t C2, bool destructive = false);
-
-    MatrixClass *inverse(bool destructive = false);
-    MatrixClass *transpose(bool destructive = false);
-    MatrixClass *cofactor();
-    MatrixClass *cofactor_of(size_t line, size_t column);
+    float reduce(MatrixType type, Reducer reducer, float initialValue = 0);
+    float reduce_line(size_t line, Reducer reducer, float initialValue = 0);
+    float reduce_column(size_t column, Reducer reducer, float initialValue = 0);
 
     bool all(MatrixType type, BooleanProducer boolean_producer);
     bool line_all(size_t line, BooleanProducer boolean_producer);
@@ -137,6 +134,14 @@ public:
     bool one(MatrixType type, BooleanProducer boolean_producer);
     bool line_one(size_t line, BooleanProducer boolean_producer);
     bool column_one(size_t column, BooleanProducer boolean_producer);
+
+    MatrixClass *permute_lines(size_t L1, size_t L2, bool destructive = false);
+    MatrixClass *permute_columns(size_t C1, size_t C2, bool destructive = false);
+
+    MatrixClass *inverse(bool destructive = false);
+    MatrixClass *transpose(bool destructive = false);
+    MatrixClass *cofactor();
+    MatrixClass *cofactor_of(size_t line, size_t column);
 
     static MatrixClass *concatenate_vertical(size_t n_args, ...);
     static MatrixClass *concatenate_horizontal(size_t n_args, ...);
