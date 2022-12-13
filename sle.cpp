@@ -1,46 +1,91 @@
 #include <math.h>
 
 #include "sle.hpp"
+#include "util.hpp"
+
+void Sle::set_matrix(MatrixClass *matrix)
+{
+    // check that the order is the same
+    this->matrix = matrix != NULL ? matrix->copy() : NULL;
+}
+
+void Sle::set_vector(MatrixClass *vector)
+{
+    this->vector = vector != NULL ? vector->copy() : NULL;
+}
+
+const std::string &Sle::get_name()
+{
+    return this->name;
+}
+
+std::size_t Sle::get_order()
+{
+    return this->order;
+}
+
+Sle *Sle::creaate_system(std::size_t order)
+{
+    return new Sle(order);
+}
+
+Sle *Sle::creaate_system(MatrixClass *matrix, MatrixClass *vector)
+{
+    return new Sle(matrix, vector);
+}
 
 Sle::Sle()
 {
     this->order = 0;
-    this->matrix = (new MatrixClass())->set_name("null-matrix");
-    this->vector = (new MatrixClass())->set_name("null-vector");
+    this->matrix = NULL;
+    this->vector = NULL;
 
-    printf("[Sle]: empty one got created\n");
+    if (Sle::is_debug_option_set(SystemDebug::SYSTEM_CREATION))
+        printf(COLOR_GREEN "[Sle]:" COLOR_RESET "empty one got created\n");
 }
 
 Sle::Sle(std::size_t order)
 {
     this->order = order;
-    this->matrix = (new MatrixClass(order, order))->set_name("matrix");
-    this->vector = (new MatrixClass(order, 1))->set_name("vector");
+    this->matrix = MatrixClass::create_matrix(order, order)->set_name("matrix");
+    this->vector = MatrixClass::create_matrix(order, 1)->set_name("vector");
 
-    printf("[Sle]: got created\n");
+    if (Sle::is_debug_option_set(SystemDebug::SYSTEM_CREATION))
+        printf(COLOR_GREEN "[Sle]:" COLOR_RESET "one got created\n");
+}
+
+void Sle::destroy()
+{
+    delete this;
 }
 
 Sle::Sle(MatrixClass *matrix, MatrixClass *vector)
 {
-    // Todo:
-    //      check that matrix is square
-    //      check that vector have the same number of lines as matrix
-    //      check that vector have only one column
+    if (matrix == NULL || vector == NULL || vector->is_null() || matrix->is_null() || !matrix->is_square() || vector->size().first != matrix->size().first || vector->size().second != 1)
+    {
+        if (Sle::is_debug_option_set(SystemDebug::SYSTEM_MISC))
+            printf(COLOR_RED "[Sle]:" COLOR_RESET "error while creating sle with given matrice and vector\n");
+        this->set_matrix(NULL);
+        this->set_vector(NULL);
+        return;
+    }
 
     this->order = matrix->size().first;
 
-    this->matrix = matrix->copy();
-    this->vector = vector->copy();
+    this->set_matrix(matrix);
+    this->set_vector(vector);
 
-    printf("[Sle]: one got created\n");
+    if (Sle::is_debug_option_set(SystemDebug::SYSTEM_CREATION))
+        printf(COLOR_GREEN "[Sle]:" COLOR_RESET "one got created\n");
 }
 
 Sle::~Sle()
 {
-    printf("[~Sle]: one got abandonned\n");
+    if (Sle::is_debug_option_set(SystemDebug::SYSTEM_DESTRUCTION))
+        printf(COLOR_RED "[~Sle]:" COLOR_RESET "(%s) got destroyed\n", this->name.length() == 0 ? "/" : this->name.c_str());
 
-    delete this->matrix;
-    delete this->vector;
+    this->matrix->destroy();
+    this->vector->destroy();
 }
 
 void Sle::set_debug_options(SystemDebug debug)
@@ -75,24 +120,18 @@ Sle *Sle::copy()
 
 Sle *Sle::create_random_int_system(std::size_t order, int min, int max)
 {
-    Sle *result;
     MatrixClass *matrix = MatrixClass::create_matrix_random_int(MatrixType::NORMAL, order, order, min, max);
     MatrixClass *vector = MatrixClass::create_matrix_random_int(MatrixType::NORMAL, order, 1, min, max);
 
-    result = new Sle(matrix, vector);
-
-    return result;
+    return new Sle(matrix, vector);
 }
 
 Sle *Sle::create_random_float_system(std::size_t order, float min, float max)
 {
-    Sle *result;
     MatrixClass *matrix = MatrixClass::create_matrix_random_float(MatrixType::NORMAL, order, order, min, max);
     MatrixClass *vector = MatrixClass::create_matrix_random_float(MatrixType::NORMAL, order, 1, min, max);
 
-    result = new Sle(matrix, vector);
-
-    return result;
+    return new Sle(matrix, vector);
 }
 
 void Sle::print()
@@ -105,10 +144,8 @@ void Sle::print()
 
 Sle *Sle::create_power_system(std::size_t order)
 {
-    Sle *result;
-
-    MatrixClass *matrix = (new MatrixClass(order, order))->set_name("power-system-matrix");
-    MatrixClass *vector = (new MatrixClass(order, 1))->set_name("power-system-vector");
+    MatrixClass *matrix = MatrixClass::create_matrix(order, order)->set_name("power-system-matrix");
+    MatrixClass *vector = MatrixClass::create_matrix(order, 1)->set_name("power-system-vector");
 
     for (size_t i = 0; i < order; i++)
     {
@@ -119,16 +156,13 @@ Sle *Sle::create_power_system(std::size_t order)
         }
     }
 
-    result = new Sle(matrix, vector);
-
-    return result;
+    return new Sle(matrix, vector);
 }
 
 Sle *Sle::create_hilbert_system(std::size_t order)
 {
-    Sle *result;
-    MatrixClass *matrix = (new MatrixClass(order, order))->set_name("hilbert-system-matrix");
-    MatrixClass *vector = (new MatrixClass(order, 1))->set_name("hilbert-system-vector");
+    MatrixClass *matrix = MatrixClass::create_matrix(order, order)->set_name("hilbert-system-matrix");
+    MatrixClass *vector = MatrixClass::create_matrix(order, 1)->set_name("hilbert-system-vector");
 
     for (size_t i = 0; i < order; i++)
     {
@@ -139,9 +173,7 @@ Sle *Sle::create_hilbert_system(std::size_t order)
         }
     }
 
-    result = new Sle(matrix, vector);
-
-    return result;
+    return new Sle(matrix, vector);
 }
 
 Sle *Sle::gauss_jordan(bool inplace)
@@ -350,17 +382,17 @@ MatrixClass *Sle::solve_cramer()
     if (determinent == 0)
     {
         printf("[solve_with_cramer]: determinant is equal to 0\n");
-        return new MatrixClass();
+        return NULL;
     }
 
-    MatrixClass *solutions = new MatrixClass(this->order, 1);
+    MatrixClass *solutions = MatrixClass::create_matrix(this->order, 1);
 
     for (size_t i = 0; i < this->order; i++)
     {
         MatrixClass *temp = MatrixClass::copy_matrix_in(matrix, vector, 0, i);
         (*solutions)[i][0] = temp->determinent() / determinent;
         // Todo: make sure the matrice has been destroyed
-        delete temp;
+        temp->destroy();
         // destroy_matrix(temp);
     }
 
@@ -374,10 +406,10 @@ MatrixClass *Sle::solve_upper_triangular()
     if (det == 0)
     {
         printf("[solve_upper_triangular]: determinant is equal to 0\n");
-        return new MatrixClass();
+        return NULL;
     }
 
-    MatrixClass *solutions = new MatrixClass(this->order, 1);
+    MatrixClass *solutions = MatrixClass::create_matrix(this->order, 1);
 
     for (int i = this->order - 1; i >= 0; i--)
     {
@@ -399,10 +431,10 @@ MatrixClass *Sle::solve_lower_triangular()
     if (det == 0)
     {
         printf("[solve_lower_triangular]: determinant is equal to 0\n");
-        return new MatrixClass();
+        return NULL;
     }
 
-    MatrixClass *solutions = new MatrixClass(this->order, 1);
+    MatrixClass *solutions = MatrixClass::create_matrix(this->order, 1);
 
     for (size_t i = 0; i < order; i++)
     {

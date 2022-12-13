@@ -15,6 +15,13 @@
 
 // add an optional param to say if the function should act destructive or noo
 
+/*IMPORTANT*/
+/*
+    make constructor private and use Factory methodes instead
+*/
+/*
+    Throw Exceptions in C
+*/
 enum MatrixType
 {
     NORMAL,
@@ -45,12 +52,12 @@ class MatrixClass
 {
 
 private:
-    float **content;
+    float **content = NULL;
 
-    std::string id;
-    std::string name;
-    std::size_t n, m;
-    std::size_t start_line, start_column;
+    std::string id = "";
+    std::string name = "";
+    std::size_t n = 0;
+    std::size_t m = 0;
 
     inline static unsigned int seed = 45;
     inline static MatrixDebug debug_options = MatrixDebug::MATRIX_NONE;
@@ -66,19 +73,26 @@ private:
 
     static float **allocate_matrix(size_t n, size_t m);
 
+    static std::string generate_unique_id(size_t n, size_t m);
+
+    MatrixClass();
+    MatrixClass(size_t n, size_t m);
+
+    ~MatrixClass();
+
 public:
     // add matrix element by element multiplication and matrix element by element division
     /*reduce functions*/
+    /*norme vectorielle*/
+    /*valeurs propres, vecteurs propres*/
+    /*delimité une matrice, sous matrice*/
 
     static void srand(unsigned int seed);
 
     static void set_debug_options(MatrixDebug debug);
     static bool is_debug_option_set(MatrixDebug debug_option);
 
-    MatrixClass();
-    MatrixClass(size_t n, size_t m);
-
-    ~MatrixClass();
+    void destroy();
 
     // creation stuff
     /*----*/
@@ -92,6 +106,7 @@ public:
     float get(size_t i, size_t j);
     void set(size_t i, size_t j, float element);
 
+    const std::string &get_name();
     MatrixClass *set_name(const std::string &name);
 
     std::pair<std::size_t, std::size_t> size();
@@ -147,10 +162,10 @@ public:
     float trace();
     float determinent();
 
-    static MatrixClass *add_matrix_matrix(MatrixClass *matrixA, MatrixClass *matrixB);
-    static MatrixClass *subtract_matrix_matrix(MatrixClass *matrixA, MatrixClass *matrixB);
-    static MatrixClass *divide_matrix_matrix(MatrixClass *matrixA, MatrixClass *matrixB);
-    static MatrixClass *multiply_matrix_matrix(MatrixClass *matrixA, MatrixClass *matrixB);
+    static MatrixClass *add_matrix_matrix(MatrixClass *matrix_A, MatrixClass *matrix_B);
+    static MatrixClass *subtract_matrix_matrix(MatrixClass *matrix_A, MatrixClass *matrix_B);
+    static MatrixClass *divide_matrix_matrix(MatrixClass *matrix_A, MatrixClass *matrix_B);
+    static MatrixClass *multiply_matrix_matrix(MatrixClass *matrix_A, MatrixClass *matrix_B);
 
     static MatrixClass *add_matrix_float(MatrixClass *matrix, float a);
     static MatrixClass *substract_matrix_float(MatrixClass *matrix, float a);
@@ -159,8 +174,8 @@ public:
 
     MatrixClass &dot(MatrixClass &matrix);
 
-    static MatrixClass &matrix_multiplication(MatrixClass &matrixA, MatrixClass &matrixB);
-    static float multiply_matrix_line_matrix_column(MatrixClass &matrixA, MatrixClass &matrixB, size_t LINE, size_t COLUMN);
+    static MatrixClass &matrix_multiplication(MatrixClass &matrix_A, MatrixClass &matrix_B);
+    static float multiply_matrix_line_matrix_column(MatrixClass &matrix_A, MatrixClass &matrix_B, size_t LINE, size_t COLUMN);
 
     std::pair<size_t, size_t> min(MatrixType type, size_t *maxI, size_t *maxJ, bool abs = false);
     size_t min_line(size_t line, bool abs = false);
@@ -178,10 +193,10 @@ public:
 
     MatrixClass *resize(size_t n, size_t m, bool inline_ = false);
 
-    static MatrixClass *replace_lines(MatrixClass *matrixA, size_t Afrom, size_t Ato, MatrixClass *matrixB, size_t Bfrom, size_t Bto);
-    static MatrixClass *replace_columns(MatrixClass *matrixA, size_t Afrom, size_t Ato, MatrixClass *matrixB, size_t Bfrom, size_t Bto);
-    static MatrixClass *replace_lines_with(MatrixClass *matrixA, size_t Afrom, size_t Ato, float number);
-    static MatrixClass *replace_columns_with(MatrixClass *matrixA, size_t Afrom, size_t Ato, float number);
+    static MatrixClass *replace_lines(MatrixClass *matrix_A, size_t Afrom, size_t Ato, MatrixClass *matrix_B, size_t Bfrom, size_t Bto);
+    static MatrixClass *replace_columns(MatrixClass *matrix_A, size_t Afrom, size_t Ato, MatrixClass *matrix_B, size_t Bfrom, size_t Bto);
+    static MatrixClass *replace_lines_with(MatrixClass *matrix_A, size_t Afrom, size_t Ato, float number);
+    static MatrixClass *replace_columns_with(MatrixClass *matrix_A, size_t Afrom, size_t Ato, float number);
 
     MatrixClass *select_lines_array(size_t *array, size_t size);
     MatrixClass *select_columns_array(size_t *array, size_t size);
@@ -191,7 +206,7 @@ public:
 
     static MatrixClass *copy_matrix_in(MatrixClass *dest, MatrixClass *src, size_t startI, size_t startJ, bool destructive = false);
 
-    static std::pair<MatrixClass &, MatrixClass &> lu_decomposition(MatrixClass &matrix);
+    static std::pair<MatrixClass *, MatrixClass *> lu_decomposition(MatrixClass *matrix);
 
     /*--operators we need--*/
     /*

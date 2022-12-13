@@ -15,33 +15,52 @@ enum SystemDebug
 };
 typedef SystemDebug SystemDebug;
 
+/*
+    Throw Exceptions in C
+*/
 class Sle
 {
 private:
-    std::string id;
+    std::string id = "";
+    std::string name = "";
+    std::size_t order = 0;
+
+    MatrixClass *matrix = NULL;
+    MatrixClass *vector = NULL;
 
     inline static unsigned int seed = 45;
     inline static SystemDebug debug_options = SystemDebug::SYSTEM_NONE;
 
-public:
-    std::string name;
-    std::size_t order;
-    MatrixClass *matrix;
-    MatrixClass *vector;
+    static std::string generate_unique_id(size_t n, size_t m);
 
+    Sle();
+    Sle(std::size_t order);
+    Sle(MatrixClass *matrix, MatrixClass *vector);
+
+    ~Sle();
+
+public:
     static void srand(unsigned int seed);
 
     static void set_debug_options(SystemDebug debug);
     static bool is_debug_option_set(SystemDebug debug_option);
 
-    Sle();
-    Sle(std::size_t order);
-    // we don't use the matrix and vector you provide, we just make copies of them
-    Sle(MatrixClass *matrix, MatrixClass *vector);
+    static Sle *creaate_system(std::size_t order);
+    static Sle *creaate_system(MatrixClass *matrix, MatrixClass *vector);
 
-    ~Sle();
+    // we don't use the matrix and vector you provide, we just make copies of them
+    // we return NULL from the constructor if the creation fails
+
+    void destroy();
 
     Sle *set_name(const std::string &name);
+
+    const std::string &get_name();
+
+    std::size_t get_order();
+
+    void set_matrix(MatrixClass *matrix);
+    void set_vector(MatrixClass *vector);
 
     void read(); /*implement it*/
     void print();
