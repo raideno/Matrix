@@ -17,9 +17,6 @@
 
 /*IMPORTANT*/
 /*
-    make constructor private and use Factory methodes instead
-*/
-/*
     Throw Exceptions in C
 */
 enum MatrixType
@@ -114,6 +111,8 @@ public:
 
     MatrixClass *copy();
     static MatrixClass *copy(MatrixClass *matrix);
+
+    MatrixClass *round(bool inplace = false);
 
     void for_each(MatrixType type, Consumer consumer);
     void for_each_line(size_t line, Consumer consumer);

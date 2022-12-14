@@ -23,6 +23,14 @@ MatrixClass &MatrixClass::select_array(size_t *lines, size_t n_lines, size_t *co
 }
 */
 
+MatrixClass *MatrixClass::round(bool inplace)
+{
+    return this->map(
+        MatrixType::NORMAL, [](size_t i, size_t j, float value) -> float
+        { return std::round(value); },
+        inplace);
+}
+
 const std::string &MatrixClass::get_name()
 {
     return this->name;
@@ -1174,12 +1182,8 @@ float MatrixClass::reduce(MatrixType type, Reducer reducer, float initialValue)
 {
     float result = initialValue;
 
-    std::cout << result << std::endl;
-
     this->for_each(type, [&reducer, &result](size_t i, size_t j, float value) -> void
                    { result = reducer(result, i, j, value); });
-
-    std::cout << result << std::endl;
 
     return result;
 }
@@ -1283,29 +1287,26 @@ MatrixClass *MatrixClass::transpose(bool destructive)
 {
     if (destructive)
     {
-        MatrixClass *save = this->copy()->set_name("save-for-transpose");
-
-        this->n = save->m;
-        this->m = save->n;
-        // TODO: destroy the old matrice
+        MatrixClass *save = this->copy();
 
         MatrixClass::desallocate(this);
 
+        this->n = save->m;
+        this->m = save->n;
+
         this->content = allocate_matrix(this->n, this->m);
 
-        for (size_t i = 0; i < this->n; i++)
-            for (size_t j = 0; j < this->m; j++)
+        for (size_t i = 0; i < this->m; i++)
+            for (size_t j = 0; j < this->n; j++)
                 (*this)[j][i] = save->get(i, j);
 
-        // TODO: destroy the save matrice
+        delete save;
 
         return this;
     }
     else
     {
         MatrixClass *result = new MatrixClass(this->m, this->n);
-
-        result->set_name("transpose");
 
         for (size_t i = 0; i < this->n; i++)
             for (size_t j = 0; j < this->m; j++)
