@@ -15,6 +15,7 @@
 
 // add an optional param to say if the function should act destructive or noo
 
+// make default name: matrix-<id>
 /*IMPORTANT*/
 /*
     Throw Exceptions in C
@@ -72,6 +73,8 @@ private:
     static float **allocate_matrix(size_t n, size_t m);
 
     static std::string generate_unique_id(size_t n, size_t m);
+
+    static void before_each(MatrixClass *matrix, const std::string &name);
 
     MatrixClass();
     MatrixClass(size_t n, size_t m);

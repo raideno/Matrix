@@ -9,22 +9,15 @@
 #include "util.hpp"
 #include "matrix.hpp"
 
-/*
-MatrixClass &MatrixClass::select_lines_array(size_t *array, size_t size)
+void MatrixClass::before_each(MatrixClass *matrix, const std::string &name)
 {
+    printf(COLOR_BOLD_WHITE "[MatrixClass-before_each]" COLOR_RESET "executed %s for %s matrix\n", name.c_str(), matrix->name.c_str());
 }
-
-MatrixClass &MatrixClass::select_columns_array(size_t *array, size_t size)
-{
-}
-
-MatrixClass &MatrixClass::select_array(size_t *lines, size_t n_lines, size_t *columns, size_t n_columns)
-{
-}
-*/
 
 MatrixClass *MatrixClass::round(bool inplace)
 {
+    before_each(this, "round");
+
     return this->map(
         MatrixType::NORMAL, [](size_t i, size_t j, float value) -> float
         { return std::round(value); },
@@ -33,14 +26,18 @@ MatrixClass *MatrixClass::round(bool inplace)
 
 const std::string &MatrixClass::get_name()
 {
+    before_each(this, "get_name");
+
     return this->name;
 }
 
+/*not set*/
 void MatrixClass::set_debug_options(MatrixDebug debug)
 {
     MatrixClass::debug_options = debug;
 }
 
+/*not set*/
 bool MatrixClass::is_debug_option_set(MatrixDebug debug_option)
 {
     return (MatrixClass::debug_options & debug_option) == debug_option;
@@ -48,6 +45,8 @@ bool MatrixClass::is_debug_option_set(MatrixDebug debug_option)
 
 void MatrixClass::set(size_t i, size_t j, float element)
 {
+    before_each(this, "set");
+
     this->content[i][j] = element;
 }
 
@@ -55,6 +54,7 @@ void MatrixClass::set(size_t i, size_t j, float element)
 MatrixClass *MatrixClass::select_lines_array(size_t *array, size_t size)
 {
     // check that matrix isn't null check that lines in array are valid, cehck that size isn't bigger than the number of lines
+    before_each(this, "select_lines_array");
 
     MatrixClass *result = new MatrixClass(size, this->m);
 
@@ -69,6 +69,7 @@ MatrixClass *MatrixClass::select_lines_array(size_t *array, size_t size)
 MatrixClass *MatrixClass::select_columns_array(size_t *array, size_t size)
 {
     // check that matrix isn't null check that lines in array are valid, cehck that size isn't bigger than the number of lines
+    before_each(this, "select_columns_array");
 
     MatrixClass *result = new MatrixClass(this->n, size);
 
@@ -83,6 +84,8 @@ MatrixClass *MatrixClass::select_array(size_t *lines, size_t n_lines, size_t *co
 {
     // do checks
 
+    before_each(this, "select_array");
+
     MatrixClass *temp;
     MatrixClass *result = NULL;
 
@@ -96,6 +99,7 @@ MatrixClass *MatrixClass::select_array(size_t *lines, size_t n_lines, size_t *co
     return result;
 }
 
+/*not set*/
 std::pair<MatrixClass *, MatrixClass *> MatrixClass::lu_decomposition(MatrixClass *matrix)
 {
     // check that matrix is square and compatible, det != 0
@@ -133,9 +137,11 @@ std::pair<MatrixClass *, MatrixClass *> MatrixClass::lu_decomposition(MatrixClas
     return std::pair<MatrixClass *, MatrixClass *>(l, u);
 }
 
+/*not set*/
 // should we remove the destructive option ?
 MatrixClass *MatrixClass::copy_matrix_in(MatrixClass *dest, MatrixClass *src, size_t startI, size_t startJ, bool destructive)
 {
+
     MatrixClass *result = destructive ? dest : dest->copy();
 
     for (size_t i = startI; i < startI + src->n; i++)
@@ -157,6 +163,8 @@ MatrixType MatrixClass::type()
     // otherwise it's a normal matrix
 
     // check if it's a all zero matrix and return NORMAL if it's the case
+    before_each(this, "type");
+
     bool allZeroes;
     bool isDiagonal = true;
     bool isLowerTriangular = true;
@@ -207,6 +215,7 @@ MatrixType MatrixClass::type()
     return NORMAL;
 }
 
+/*not set*/
 MatrixClass *MatrixClass::replace_lines(MatrixClass *matrix_A, size_t Afrom, size_t Ato, MatrixClass *matrix_B, size_t Bfrom, size_t Bto)
 {
     MatrixClass *result;
@@ -259,6 +268,7 @@ MatrixClass *MatrixClass::replace_columns(MatrixClass *matrix_A, size_t Afrom, s
     return result;
 }
 
+/*not set*/
 MatrixClass *MatrixClass::replace_lines_with(MatrixClass *matrix_A, size_t Afrom, size_t Ato, float number)
 {
     MatrixClass *result;
@@ -278,6 +288,7 @@ MatrixClass *MatrixClass::replace_lines_with(MatrixClass *matrix_A, size_t Afrom
     return result;
 }
 
+/*not set*/
 MatrixClass *MatrixClass::replace_columns_with(MatrixClass *matrix_A, size_t Afrom, size_t Ato, float number)
 {
     MatrixClass *result;
@@ -299,7 +310,9 @@ MatrixClass *MatrixClass::replace_columns_with(MatrixClass *matrix_A, size_t Afr
 
 MatrixClass *MatrixClass::resize(size_t n, size_t m, bool inline_)
 {
+    before_each(this, "resize");
     // check that it's not negatif values
+
     if (inline_)
     {
         MatrixClass *save = this->copy()->set_name("resize-save");
@@ -331,6 +344,7 @@ MatrixClass *MatrixClass::resize(size_t n, size_t m, bool inline_)
     }
 }
 
+/*not set*/
 void MatrixClass::desallocate_matrices(size_t n_args, ...)
 {
     va_list ap;
@@ -347,9 +361,9 @@ void MatrixClass::desallocate_matrices(size_t n_args, ...)
     va_end(ap);
 }
 
+/*not set*/
 void MatrixClass::desallocate(MatrixClass *matrix)
 {
-
     if (matrix->content == NULL)
         return;
 
@@ -377,6 +391,8 @@ void MatrixClass::desallocate(MatrixClass *matrix)
 
 MatrixClass *MatrixClass::set_name(const std::string &name)
 {
+    before_each(this, "set_name");
+
     this->name = name;
 
     return this;
@@ -384,6 +400,8 @@ MatrixClass *MatrixClass::set_name(const std::string &name)
 
 MatrixClass::~MatrixClass()
 {
+    before_each(this, "~MatrixClass()");
+
     /*
         if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_DESTRUCTION))
             printf(COLOR_RED "[~MatrixClass]:" COLOR_RESET "destroying a matrix " COLOR_UNDERLINE "(%s)" COLOR_RESET "\n", this->name.length() == 0 ? "/" : this->name.c_str());
@@ -421,6 +439,8 @@ MatrixClass::~MatrixClass()
 // make the print check the max in the column and not in the entire matrix
 void MatrixClass::print(size_t precision, bool sign)
 {
+    before_each(this, "print");
+
     size_t size;
     std::pair<size_t, size_t> max;
 
@@ -446,6 +466,8 @@ void MatrixClass::print(size_t precision, bool sign)
 
 void MatrixClass::print_line(size_t line, size_t precision, bool sign)
 {
+    before_each(this, "print_line");
+
     size_t size;
     std::pair<size_t, size_t> max;
 
@@ -470,6 +492,8 @@ void MatrixClass::print_line(size_t line, size_t precision, bool sign)
 
 void MatrixClass::print_col(size_t column, size_t precision, bool sign)
 {
+    before_each(this, "print_col");
+
     size_t size;
     std::pair<size_t, size_t> max;
 
@@ -491,6 +515,7 @@ void MatrixClass::print_col(size_t column, size_t precision, bool sign)
     printf("]");
 }
 
+/*not set*/
 // ca serai pas plus inteligent d'afficher colonne par colonne ?
 void MatrixClass::print_matrices_concatenation(size_t n_args, ...)
 {
@@ -535,6 +560,7 @@ void MatrixClass::print_matrices_concatenation(size_t n_args, ...)
     }
 }
 
+/*not set*/
 std::ostream &operator<<(std::ostream &os, MatrixClass &matrix)
 {
 
@@ -545,6 +571,8 @@ std::ostream &operator<<(std::ostream &os, MatrixClass &matrix)
 
 float MatrixClass::get(size_t i, size_t j)
 {
+    before_each(this, "get");
+
     if (i > this->n - 1)
     {
         printf("[get]: invalid i provided\n");
@@ -560,6 +588,7 @@ float MatrixClass::get(size_t i, size_t j)
     return this->content[i][j];
 }
 
+/*not set*/
 MatrixClass *MatrixClass::divide_matrix_matrix(MatrixClass *matrix_A, MatrixClass *matrix_B)
 {
     MatrixClass *result;
@@ -580,6 +609,7 @@ MatrixClass *MatrixClass::divide_matrix_matrix(MatrixClass *matrix_A, MatrixClas
     return result;
 }
 
+/*not set*/
 MatrixClass *MatrixClass::multiply_matrix_matrix(MatrixClass *matrix_A, MatrixClass *matrix_B)
 {
     MatrixClass *result;
@@ -602,41 +632,49 @@ MatrixClass *MatrixClass::multiply_matrix_matrix(MatrixClass *matrix_A, MatrixCl
 
 MatrixClass *MatrixClass::operator+(MatrixClass *matrix)
 {
+    before_each(this, "operator");
     return MatrixClass::add_matrix_matrix(this, matrix);
 }
 
 MatrixClass *MatrixClass::operator-(MatrixClass *matrix)
 {
+    before_each(this, "operator");
     return MatrixClass::subtract_matrix_matrix(this, matrix);
 }
 
 MatrixClass *MatrixClass::operator*(MatrixClass *matrix)
 {
+    before_each(this, "operator");
     return MatrixClass::multiply_matrix_matrix(this, matrix);
 }
 
 MatrixClass *MatrixClass::operator/(MatrixClass *matrix)
 {
+    before_each(this, "operator");
     return MatrixClass::divide_matrix_matrix(this, matrix);
 }
 
 MatrixClass *MatrixClass::operator+(float number)
 {
+    before_each(this, "operator");
     return MatrixClass::add_matrix_float(this, number);
 }
 
 MatrixClass *MatrixClass::operator-(float number)
 {
+    before_each(this, "operator");
     return MatrixClass::substract_matrix_float(this, number);
 }
 
 MatrixClass *MatrixClass::operator*(float number)
 {
+    before_each(this, "operator");
     return MatrixClass::multiply_matrix_float(this, number);
 }
 
 MatrixClass *MatrixClass::operator/(float number)
 {
+    before_each(this, "operator");
     return MatrixClass::divide_matrix_float(this, number);
 }
 
@@ -660,21 +698,29 @@ MatrixClass &MatrixClass::operator-=(float number)
 
 MatrixClass *MatrixClass::operator++()
 {
+    before_each(this, "operator");
+
     return MatrixClass::add_matrix_float(this, 1);
 }
 
 MatrixClass *MatrixClass::operator--()
 {
+    before_each(this, "operator");
+
     return MatrixClass::substract_matrix_float(this, 1);
 }
 
 float *MatrixClass::operator[](size_t i)
 {
+    before_each(this, "operator");
+
     return this->content[i];
 }
 
 std::pair<size_t, size_t> MatrixClass::max(MatrixType type, bool absolute)
 {
+    before_each(this, "max");
+
     std::pair<size_t, size_t> max(0, 0);
 
     this->for_each(type, [&absolute, &matrix = *this, &max](size_t i, size_t j, float element) -> void
@@ -695,6 +741,8 @@ std::pair<size_t, size_t> MatrixClass::max(MatrixType type, bool absolute)
 
 size_t MatrixClass::max_line(size_t line, bool abs)
 {
+    before_each(this, "max_line");
+
     size_t mJ = 0;
 
     this->for_each_line(line, [&matrix = *this, &line, &mJ](size_t i, size_t j, float element) -> void
@@ -707,6 +755,8 @@ size_t MatrixClass::max_line(size_t line, bool abs)
 
 size_t MatrixClass::max_column(size_t column, bool absolute)
 {
+    before_each(this, "max_column");
+
     size_t mI = 0;
 
     this->for_each_column(column, [&matrix = *this, &absolute, &column, &mI](size_t i, size_t j, float element) -> void
@@ -725,6 +775,8 @@ size_t MatrixClass::max_column(size_t column, bool absolute)
 
 std::pair<size_t, size_t> MatrixClass::min(MatrixType type, size_t *maxI, size_t *maxJ, bool absolute)
 {
+    before_each(this, "min");
+
     std::pair<size_t, size_t> max(0, 0);
 
     this->for_each(type, [&absolute, &matrix = *this, &max](size_t i, size_t j, float element) -> void
@@ -745,6 +797,8 @@ std::pair<size_t, size_t> MatrixClass::min(MatrixType type, size_t *maxI, size_t
 
 size_t MatrixClass::min_line(size_t line, bool absolute)
 {
+    before_each(this, "min_line");
+
     size_t mJ = 0;
 
     this->for_each_line(line, [&absolute, &matrix = *this, &line, &mJ](size_t i, size_t j, float element) -> void
@@ -763,6 +817,8 @@ size_t MatrixClass::min_line(size_t line, bool absolute)
 
 size_t MatrixClass::min_column(size_t column, bool absolute)
 {
+    before_each(this, "min_column");
+
     size_t mI = 0;
 
     this->for_each_column(column, [&matrix = *this, &absolute, &column, &mI](size_t i, size_t j, float element) -> void
@@ -781,9 +837,12 @@ size_t MatrixClass::min_column(size_t column, bool absolute)
 
 MatrixClass &MatrixClass::dot(MatrixClass &matrix)
 {
+    before_each(this, "dot");
+
     return MatrixClass::matrix_multiplication(*this, matrix);
 }
 
+/*not set*/
 MatrixClass &MatrixClass::matrix_multiplication(MatrixClass &matrix_A, MatrixClass &matrix_B)
 {
     MatrixClass *result;
@@ -803,6 +862,7 @@ MatrixClass &MatrixClass::matrix_multiplication(MatrixClass &matrix_A, MatrixCla
     return *result;
 }
 
+/*not set*/
 float MatrixClass::multiply_matrix_line_matrix_column(MatrixClass &matrix_A, MatrixClass &matrix_B, size_t LINE, size_t COLUMN)
 {
     float result = 0;
@@ -824,6 +884,8 @@ float MatrixClass::multiply_matrix_line_matrix_column(MatrixClass &matrix_A, Mat
 /*faire une fonction qui trouve la cologne ou il y a le plus de zero*/
 float MatrixClass::determinent()
 {
+    before_each(this, "determinent");
+
     float result = 0;
 
     if (!this->is_square())
@@ -856,6 +918,8 @@ float MatrixClass::determinent()
 
 float MatrixClass::trace()
 {
+    before_each(this, "trace");
+
     float result = 0;
 
     if (this->is_square())
@@ -872,6 +936,8 @@ float MatrixClass::trace()
 
 MatrixClass *MatrixClass::select_lines(size_t start, size_t end)
 {
+    before_each(this, "select_lines");
+
     if (start > end)
     {
         printf("[select_lines]: start is bigger than end\n");
@@ -897,6 +963,7 @@ MatrixClass *MatrixClass::select_lines(size_t start, size_t end)
 MatrixClass *MatrixClass::select_columns(size_t start, size_t end)
 {
     // check that start < end
+    before_each(this, "select_columns");
 
     if (start > end)
     {
@@ -922,6 +989,8 @@ MatrixClass *MatrixClass::select_columns(size_t start, size_t end)
 
 MatrixClass *MatrixClass::select_(size_t startLine, size_t endLine, size_t startColumn, size_t endColumn)
 {
+    before_each(this, "select_");
+
     MatrixClass *temp;
     MatrixClass *result;
 
@@ -939,6 +1008,7 @@ MatrixClass *MatrixClass::select_(size_t startLine, size_t endLine, size_t start
 
 MatrixClass *MatrixClass::delete_lines(size_t start, size_t end)
 {
+    before_each(this, "delete_lines");
 
     if (start > this->n - 1 || end > this->n - 1)
     {
@@ -963,6 +1033,8 @@ MatrixClass *MatrixClass::delete_lines(size_t start, size_t end)
 MatrixClass *MatrixClass::delete_columns(size_t start, size_t end)
 {
 
+    before_each(this, "delete_columns");
+
     if (start > this->m - 1 || end > this->m - 1)
     {
         printf("[delete_columns]: received invalid startColumn or endColumn\n");
@@ -986,6 +1058,8 @@ MatrixClass *MatrixClass::delete_columns(size_t start, size_t end)
 
 MatrixClass *MatrixClass::crop(size_t startLine, size_t endLine, size_t startColumn, size_t endColumn)
 {
+    before_each(this, "crop");
+
     MatrixClass *temp;
     MatrixClass *result;
 
@@ -1006,6 +1080,8 @@ MatrixClass *MatrixClass::crop(size_t startLine, size_t endLine, size_t startCol
 
 bool MatrixClass::is_diagonal()
 {
+    before_each(this, "is_diagonal");
+
     if (!this->is_square())
         return false;
 
@@ -1023,6 +1099,8 @@ bool MatrixClass::is_diagonal()
 
 bool MatrixClass::is_triangular()
 {
+    before_each(this, "is_triangular");
+
     if (!this->is_square())
         return false;
 
@@ -1031,6 +1109,8 @@ bool MatrixClass::is_triangular()
 
 bool MatrixClass::is_lower_triangular()
 {
+    before_each(this, "is_lower_triangular");
+
     if (!this->is_square())
         return false;
 
@@ -1044,6 +1124,8 @@ bool MatrixClass::is_lower_triangular()
 
 bool MatrixClass::is_upper_triangular()
 {
+    before_each(this, "is_upper_triangular");
+
     if (!this->is_square())
         return false;
 
@@ -1057,16 +1139,24 @@ bool MatrixClass::is_upper_triangular()
 
 bool MatrixClass::is_null()
 {
+    before_each(this, "is_null");
+
     return this->content == NULL;
 }
 
 bool MatrixClass::is_square()
 {
+    before_each(this, "is_square");
+
+    // TODO: check that it's not null also
+
     return this->n == this->m;
 }
 
 void MatrixClass::read(MatrixType type)
 {
+    before_each(this, "read");
+
     if ((type == DIAGONAL || type == UPPER_TRIANGLE || type == LOWER_TRIANGLE) && !this->is_square())
     {
         printf("[read_matrix]: matrix must be a square matrix for this type\n");
@@ -1083,8 +1173,10 @@ void MatrixClass::read(MatrixType type)
         true);
 }
 
+/*not set*/
 MatrixClass *MatrixClass::concatenate_vertical(size_t n_args, ...)
 {
+
     // if one of the params is NULL, or invalid we destroy the allocated matrice + print an error
     va_list ap;
     MatrixClass *matrix;
@@ -1124,6 +1216,7 @@ MatrixClass *MatrixClass::concatenate_vertical(size_t n_args, ...)
     return result;
 }
 
+/*not set*/
 MatrixClass *MatrixClass::concatenate_horizontal(size_t n_args, ...)
 {
     // if one of the params is NULL, or invalid we destroy the allocated matrice + print an error
@@ -1168,6 +1261,8 @@ MatrixClass *MatrixClass::concatenate_horizontal(size_t n_args, ...)
 
 bool MatrixClass::one(MatrixType type, BooleanProducer boolean_producer)
 {
+    before_each(this, "one");
+
     bool result = false;
 
     this->for_each(type, [&boolean_producer, &result](size_t i, size_t j, float element) -> void
@@ -1180,6 +1275,8 @@ bool MatrixClass::one(MatrixType type, BooleanProducer boolean_producer)
 
 float MatrixClass::reduce(MatrixType type, Reducer reducer, float initialValue)
 {
+    before_each(this, "reduce");
+
     float result = initialValue;
 
     this->for_each(type, [&reducer, &result](size_t i, size_t j, float value) -> void
@@ -1190,6 +1287,8 @@ float MatrixClass::reduce(MatrixType type, Reducer reducer, float initialValue)
 
 float MatrixClass::reduce_line(size_t line, Reducer reducer, float initialValue)
 {
+    before_each(this, "reduce_line");
+
     float result = initialValue;
 
     this->for_each_line(line, [&reducer, &result](size_t i, size_t j, float value) -> void
@@ -1200,6 +1299,8 @@ float MatrixClass::reduce_line(size_t line, Reducer reducer, float initialValue)
 
 float MatrixClass::reduce_column(size_t column, Reducer reducer, float initialValue)
 {
+    before_each(this, "reduce_column");
+
     float result = initialValue;
 
     this->for_each_column(column, [&reducer, &result](size_t i, size_t j, float value) -> void
@@ -1210,6 +1311,8 @@ float MatrixClass::reduce_column(size_t column, Reducer reducer, float initialVa
 
 bool MatrixClass::line_one(size_t line, BooleanProducer boolean_producer)
 {
+    before_each(this, "line_one");
+
     for (size_t j = 0; j < this->m; j++)
         if (boolean_producer(line, j, (*this)[line][j]))
             return true;
@@ -1219,6 +1322,8 @@ bool MatrixClass::line_one(size_t line, BooleanProducer boolean_producer)
 
 bool MatrixClass::column_one(size_t column, BooleanProducer boolean_producer)
 {
+    before_each(this, "column_one");
+
     for (size_t i = 0; i < this->n; i++)
         if (boolean_producer(i, column, (*this)[i][column]))
             return true;
@@ -1228,6 +1333,8 @@ bool MatrixClass::column_one(size_t column, BooleanProducer boolean_producer)
 
 bool MatrixClass::all(MatrixType type, BooleanProducer boolean_producer)
 {
+    before_each(this, "all");
+
     bool result = true;
 
     this->for_each(type, [&boolean_producer, &result](size_t i, size_t j, float element) -> void
@@ -1240,6 +1347,8 @@ bool MatrixClass::all(MatrixType type, BooleanProducer boolean_producer)
 
 bool MatrixClass::line_all(size_t line, BooleanProducer boolean_producer)
 {
+    before_each(this, "line_all");
+
     for (size_t j = 0; j < this->m; j++)
         if (!boolean_producer(line, j, (*this)[line][j]))
             return false;
@@ -1249,6 +1358,8 @@ bool MatrixClass::line_all(size_t line, BooleanProducer boolean_producer)
 
 bool MatrixClass::column_all(size_t column, BooleanProducer boolean_producer)
 {
+    before_each(this, "column_all");
+
     for (size_t i = 0; i < this->n; i++)
         if (!boolean_producer(i, column, (*this)[i][column]))
             return false;
@@ -1258,6 +1369,8 @@ bool MatrixClass::column_all(size_t column, BooleanProducer boolean_producer)
 
 MatrixClass *MatrixClass::inverse(bool destructive)
 {
+    before_each(this, "inverse");
+
     float det;
     MatrixClass *result;
     MatrixClass *cofactor_matrix;
@@ -1285,6 +1398,8 @@ MatrixClass *MatrixClass::inverse(bool destructive)
 
 MatrixClass *MatrixClass::transpose(bool destructive)
 {
+    before_each(this, "transpose");
+
     if (destructive)
     {
         MatrixClass *save = this->copy();
@@ -1320,6 +1435,8 @@ MatrixClass *MatrixClass::cofactor()
 {
     // TODO: check that matrix is a square matrix
 
+    before_each(this, "cofactor");
+
     MatrixClass *result = new MatrixClass(this->n, this->m);
 
     for (size_t i = 0; i < this->n; i++)
@@ -1338,6 +1455,8 @@ MatrixClass *MatrixClass::cofactor()
 
 MatrixClass *MatrixClass::cofactor_of(size_t line, size_t column)
 {
+    before_each(this, "cofactor_of");
+
     int k = 0;
     float *array;
     MatrixClass *result;
@@ -1367,6 +1486,8 @@ MatrixClass *MatrixClass::cofactor_of(size_t line, size_t column)
 
 MatrixClass::MatrixClass()
 {
+    before_each(this, "MatrixClass");
+
     this->m = 0;
     this->n = 0;
     this->content = NULL;
@@ -1379,6 +1500,8 @@ MatrixClass::MatrixClass()
 
 MatrixClass *MatrixClass::permute_lines(size_t L1, size_t L2, bool destructive)
 {
+    before_each(this, "permute_lines");
+
     float temp;
     MatrixClass *result = destructive ? this : this->copy();
 
@@ -1394,6 +1517,8 @@ MatrixClass *MatrixClass::permute_lines(size_t L1, size_t L2, bool destructive)
 
 MatrixClass *MatrixClass::permute_columns(size_t C1, size_t C2, bool destructive)
 {
+    before_each(this, "permute_columns");
+
     float temp;
     MatrixClass *result = destructive ? this : this->copy();
 
@@ -1407,11 +1532,13 @@ MatrixClass *MatrixClass::permute_columns(size_t C1, size_t C2, bool destructive
     return result;
 }
 
+/*not set*/
 MatrixClass *MatrixClass::create_matrix(size_t n, size_t m)
 {
     return new MatrixClass(n, m);
 }
 
+/*not set*/
 MatrixClass *MatrixClass::matrix_from_array(MatrixType type, float *array, size_t n, size_t m)
 {
     int counter = 0;
@@ -1427,8 +1554,10 @@ MatrixClass *MatrixClass::matrix_from_array(MatrixType type, float *array, size_
     return matrix;
 }
 
+/*not set*/
 MatrixClass *MatrixClass::create_matrix_with(MatrixType type, size_t n, size_t m, float number)
 {
+
     MatrixClass *matrix = new MatrixClass(n, m);
 
     matrix->map(
@@ -1439,6 +1568,7 @@ MatrixClass *MatrixClass::create_matrix_with(MatrixType type, size_t n, size_t m
     return matrix;
 }
 
+/*not set*/
 MatrixClass *MatrixClass::create_matrix_random_int(MatrixType type, size_t n, size_t m, int min, int max)
 {
     MatrixClass *matrix = new MatrixClass(n, m);
@@ -1451,6 +1581,7 @@ MatrixClass *MatrixClass::create_matrix_random_int(MatrixType type, size_t n, si
     return matrix;
 }
 
+/*not set*/
 MatrixClass *MatrixClass::create_matrix_random_float(MatrixType type, size_t n, size_t m, float min, float max)
 {
     MatrixClass *matrix = new MatrixClass(n, m);
@@ -1465,6 +1596,7 @@ MatrixClass *MatrixClass::create_matrix_random_float(MatrixType type, size_t n, 
 
 MatrixClass::MatrixClass(size_t n, size_t m)
 {
+    before_each(this, "MatrixClass(size_t, size_t)");
 
     MatrixClass::created_matrices++;
 
@@ -1503,9 +1635,12 @@ float **MatrixClass::allocate_matrix(size_t n, size_t m)
 
 MatrixClass *MatrixClass::copy()
 {
+    before_each(this, "copy");
+
     return MatrixClass::copy(this);
 }
 
+/*not set*/
 MatrixClass *MatrixClass::copy(MatrixClass *matrix)
 {
     MatrixClass *result = new MatrixClass(matrix->n, matrix->m);
@@ -1518,11 +1653,13 @@ MatrixClass *MatrixClass::copy(MatrixClass *matrix)
     return result;
 }
 
+/*not set*/
 void MatrixClass::srand(unsigned int seed)
 {
     MatrixClass::seed = seed;
 }
 
+/*not set*/
 MatrixClass *MatrixClass::add_matrix_matrix(MatrixClass *matrix_A, MatrixClass *matrix_B)
 {
     MatrixClass *result = new MatrixClass(matrix_A->n, matrix_A->m);
@@ -1537,6 +1674,7 @@ MatrixClass *MatrixClass::add_matrix_matrix(MatrixClass *matrix_A, MatrixClass *
     return result;
 }
 
+/*not set*/
 MatrixClass *MatrixClass::subtract_matrix_matrix(MatrixClass *matrix_A, MatrixClass *matrix_B)
 {
     MatrixClass *result = new MatrixClass(matrix_A->n, matrix_A->m);
@@ -1551,6 +1689,7 @@ MatrixClass *MatrixClass::subtract_matrix_matrix(MatrixClass *matrix_A, MatrixCl
     return result;
 }
 
+/*not set*/
 MatrixClass *MatrixClass::add_matrix_float(MatrixClass *matrix, float a)
 {
     MatrixClass *result = new MatrixClass(matrix->n, matrix->m);
@@ -1563,11 +1702,13 @@ MatrixClass *MatrixClass::add_matrix_float(MatrixClass *matrix, float a)
     return result;
 }
 
+/*not set*/
 MatrixClass *MatrixClass::substract_matrix_float(MatrixClass *matrix, float a)
 {
     return add_matrix_float(matrix, -a);
 }
 
+/*not set*/
 MatrixClass *MatrixClass::multiply_matrix_float(MatrixClass *matrix, float a)
 {
     MatrixClass *result = new MatrixClass(matrix->n, matrix->m);
@@ -1580,6 +1721,7 @@ MatrixClass *MatrixClass::multiply_matrix_float(MatrixClass *matrix, float a)
     return result;
 }
 
+/*not set*/
 MatrixClass *MatrixClass::divide_matrix_float(MatrixClass *matrix, float a)
 {
     MatrixClass *result = new MatrixClass(matrix->n, matrix->m);
@@ -1594,6 +1736,8 @@ MatrixClass *MatrixClass::divide_matrix_float(MatrixClass *matrix, float a)
 
 void MatrixClass::for_each(MatrixType type, Consumer consumer)
 {
+    before_each(this, "for_each");
+
     if ((type == DIAGONAL || type == UPPER_TRIANGLE || type == LOWER_TRIANGLE) && !this->is_square())
     {
         printf("[for_each]: matrix must be a square matrix for this type\n");
@@ -1632,23 +1776,31 @@ void MatrixClass::for_each(MatrixType type, Consumer consumer)
 }
 void MatrixClass::for_each_line(size_t line, Consumer consumer)
 {
+    before_each(this, "for_each_line");
+
     for (size_t j = 0; j < this->m; j++)
         consumer(line, j, (*this)[line][j]);
 }
 
 void MatrixClass::for_each_column(size_t column, Consumer consumer)
 {
+    before_each(this, "for_each_column");
+
     for (size_t i = 0; i < this->n; i++)
         consumer(i, column, (*this)[i][column]);
 }
 
 void MatrixClass::destroy()
 {
+    before_each(this, "destroy");
+
     delete this;
 }
 
 MatrixClass *MatrixClass::map(MatrixType type, Producer producer, bool inplace)
 {
+    before_each(this, "map");
+
     MatrixClass *result;
 
     if ((type == DIAGONAL || type == UPPER_TRIANGLE || type == LOWER_TRIANGLE) && !this->is_square())
@@ -1690,6 +1842,8 @@ MatrixClass *MatrixClass::map(MatrixType type, Producer producer, bool inplace)
 }
 MatrixClass *MatrixClass::map_line(size_t line, Producer producer, bool inplace)
 {
+    before_each(this, "map_line");
+
     MatrixClass *result = inplace ? this : new MatrixClass(this->n, this->m);
 
     for (size_t j = 0; j < this->m; j++)
@@ -1700,6 +1854,8 @@ MatrixClass *MatrixClass::map_line(size_t line, Producer producer, bool inplace)
 
 MatrixClass *MatrixClass::map_column(size_t column, Producer producer, bool inplace)
 {
+    before_each(this, "map_column");
+
     MatrixClass *result = inplace ? this : new MatrixClass(this->n, this->m);
 
     for (size_t i = 0; i < this->n; i++)

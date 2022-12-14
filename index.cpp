@@ -6,6 +6,8 @@
 #include "util.hpp"
 #include "matrix.hpp"
 
+/*study unions*/
+
 int main()
 {
     Sle::srand(time(NULL));
@@ -23,10 +25,10 @@ int main()
 
     matrix->transpose(true)->print();
 
+    matrix->round(true)->print();
+
     sum = matrix->reduce(NORMAL, [](float acumulator, size_t i, size_t j, float value) -> float
                          { return acumulator + value; });
-
-    matrix->round(true)->print();
 
     printf("sum: %f\n", sum);
 
