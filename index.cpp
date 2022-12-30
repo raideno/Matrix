@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "sle.hpp"
-#include "util.hpp"
-#include "matrix.hpp"
+#include "lib/sle.hpp"
+#include "lib/util.hpp"
+#include "lib/matrix.hpp"
 
 int main()
 {

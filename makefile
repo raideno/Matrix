@@ -1,20 +1,22 @@
 CC=g++
 CPPFLAGS=-std=c++17
 
+VPATH=lib
+
 CPPFILES=util.cpp matrix.cpp sle.cpp index.cpp
 CPPOBJECTS=util.o matrix.o sle.o index.o
 
 BINARY=program
 
+.PHONY: all run clean
+
 all:$(BINARY)
 
 $(BINARY):$(CPPOBJECTS)
 	$(CC) -o $@ $^
-#	echo "compiled ($^) => $@"
 
 %.o:%.c
 	$(CC) $(CPPFLAGS) -c -o $@ $^
-#	echo "compiled file $^"
 
 run:$(BINARY)
 	./$(BINARY)
