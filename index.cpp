@@ -8,7 +8,6 @@
 
 int main()
 {
-
     Sle::srand(time(NULL));
     Sle::set_debug_options(SystemDebug::SYSTEM_NONE);
 
