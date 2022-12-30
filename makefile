@@ -22,4 +22,5 @@ run:$(BINARY)
 	./$(BINARY)
 
 clean:
-	rm -rf $(BINARY) $(CPPOBJECTS)
+	rm -rf $(CPPOBJECTS)
+#	rm -rf $(BINARY) $(CPPOBJECTS)
