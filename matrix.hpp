@@ -58,6 +58,13 @@ private:
     std::size_t n = 0;
     std::size_t m = 0;
 
+    int startLine = 0;
+    int endLine = 0;
+    int startColumn = -1;
+    int endColumn = -1;
+
+    int uses = 0;
+
     inline static unsigned int seed = 45;
     inline static MatrixDebug debug_options = MatrixDebug::MATRIX_NONE;
 
@@ -75,6 +82,7 @@ private:
     static std::string generate_unique_id(size_t n, size_t m);
 
     static void before_each(MatrixClass *matrix, const std::string &name);
+    static void after_each(MatrixClass *matrix, const std::string &name);
 
     MatrixClass();
     MatrixClass(size_t n, size_t m);
@@ -87,6 +95,10 @@ public:
     /*norme vectorielle*/
     /*valeurs propres, vecteurs propres*/
     /*delimité une matrice, sous matrice*/
+
+    MatrixClass *convolution(MatrixClass *matrix);
+
+    MatrixClass *limit(int startLine = 0, int endLine = -1, int startColumn = 0, int endColumn = -1, bool temp = true);
 
     static void srand(unsigned int seed);
 
@@ -179,10 +191,10 @@ public:
     static MatrixClass *multiply_matrix_float(MatrixClass *matrix, float a);
     static MatrixClass *divide_matrix_float(MatrixClass *matrix, float a);
 
-    MatrixClass &dot(MatrixClass &matrix);
+    MatrixClass *dot(MatrixClass *matrix);
 
-    static MatrixClass &matrix_multiplication(MatrixClass &matrix_A, MatrixClass &matrix_B);
-    static float multiply_matrix_line_matrix_column(MatrixClass &matrix_A, MatrixClass &matrix_B, size_t LINE, size_t COLUMN);
+    static MatrixClass *matrix_multiplication(MatrixClass *matrix_A, MatrixClass *matrix_B);
+    static float multiply_matrix_line_matrix_column(MatrixClass *matrix_A, MatrixClass *matrix_B, size_t LINE, size_t COLUMN);
 
     std::pair<size_t, size_t> min(MatrixType type, size_t *maxI, size_t *maxJ, bool abs = false);
     size_t min_line(size_t line, bool abs = false);
@@ -237,6 +249,7 @@ public:
         << Matrix <<
     */
 
+    /*review*/
     MatrixClass *operator+(MatrixClass *matrix);
     MatrixClass *operator-(MatrixClass *matrix);
     MatrixClass *operator*(MatrixClass *matrix);

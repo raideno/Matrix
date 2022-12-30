@@ -9,24 +9,60 @@
 #include "util.hpp"
 #include "matrix.hpp"
 
+MatrixClass *MatrixClass::limit(int startLine, int endLine, int startColumn, int endColumn, bool temp)
+{
+    before_each(this, "limit");
+
+    this->startLine = startLine;
+    this->endLine = endLine;
+    this->startColumn = startColumn;
+    this->endColumn = endColumn;
+
+    this->uses = temp ? 1 : -1;
+
+    // after_each(this, "limit");
+
+    return this;
+}
+
 void MatrixClass::before_each(MatrixClass *matrix, const std::string &name)
 {
-    printf(COLOR_BOLD_WHITE "[MatrixClass-before_each]" COLOR_RESET "executed %s for %s matrix\n", name.c_str(), matrix->name.c_str());
+    if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_MISC))
+        printf(COLOR_BOLD_WHITE "[MatrixClass-before_each]" COLOR_RESET "executed %s for %s matrix\n", name.c_str(), matrix->name.c_str());
+}
+
+void MatrixClass::after_each(MatrixClass *matrix, const std::string &name)
+{
+    if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_MISC))
+        printf(COLOR_BOLD_WHITE "[MatrixClass-before_each]" COLOR_RESET "finished %s for %s matrix\n", name.c_str(), matrix->name.c_str());
+
+    matrix->uses = matrix->uses == -1 ? -1 : matrix->uses - 1;
+}
+
+MatrixClass *MatrixClass::convolution(MatrixClass *matrix)
+{
+    return NULL;
 }
 
 MatrixClass *MatrixClass::round(bool inplace)
 {
     before_each(this, "round");
 
-    return this->map(
+    MatrixClass *result = this->map(
         MatrixType::NORMAL, [](size_t i, size_t j, float value) -> float
         { return std::round(value); },
         inplace);
+
+    after_each(this, "round");
+
+    return result;
 }
 
 const std::string &MatrixClass::get_name()
 {
     before_each(this, "get_name");
+
+    after_each(this, "get_name");
 
     return this->name;
 }
@@ -48,6 +84,8 @@ void MatrixClass::set(size_t i, size_t j, float element)
     before_each(this, "set");
 
     this->content[i][j] = element;
+
+    after_each(this, "set");
 }
 
 // not sure it works
@@ -61,6 +99,8 @@ MatrixClass *MatrixClass::select_lines_array(size_t *array, size_t size)
     for (size_t i = 0; i < size; i++)
         for (size_t j = 0; j < this->m; j++)
             (*result)[i][j] = (*this)[array[i]][j];
+
+    after_each(this, "select_lines_array");
 
     return result;
 }
@@ -76,6 +116,8 @@ MatrixClass *MatrixClass::select_columns_array(size_t *array, size_t size)
     for (size_t i = 0; i < this->n; i++)
         for (size_t j = 0; j < size; j++)
             (*result)[i][j] = (*this)[i][array[j]];
+
+    after_each(this, "select_lines_column");
 
     return result;
 }
@@ -95,6 +137,8 @@ MatrixClass *MatrixClass::select_array(size_t *lines, size_t n_lines, size_t *co
 
     // Todo: make sure temp is properly detroyed
     // destroy_matrix(temp);
+
+    after_each(this, "select_array");
 
     return result;
 }
@@ -211,6 +255,8 @@ MatrixType MatrixClass::type()
 
     if (isUpperTriangular)
         return LOWER_TRIANGLE;
+
+    after_each(this, "type");
 
     return NORMAL;
 }
@@ -330,6 +376,8 @@ MatrixClass *MatrixClass::resize(size_t n, size_t m, bool inline_)
 
         // Todo: destroy save
 
+        after_each(this, "resize");
+
         return this;
     }
     else
@@ -339,6 +387,8 @@ MatrixClass *MatrixClass::resize(size_t n, size_t m, bool inline_)
         for (size_t i = 0; i < std::min(this->n, n); i++)
             for (size_t j = 0; j < std::min(this->m, m); j++)
                 (*result)[i][j] = (*this)[i][j];
+
+        after_each(this, "resize");
 
         return result;
     }
@@ -395,6 +445,8 @@ MatrixClass *MatrixClass::set_name(const std::string &name)
 
     this->name = name;
 
+    after_each(this, "set_name");
+
     return this;
 }
 
@@ -434,6 +486,8 @@ MatrixClass::~MatrixClass()
 
     if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_MISC))
         printf(COLOR_YELLOW "[~MatrixClass-]:" COLOR_RESET "%ld, " COLOR_BOLD_WHITE "%ld" COLOR_RESET ", %ld, " COLOR_BOLD_WHITE "%ld" COLOR_RESET "(created, allocated, destroyed, desallocated)\n", MatrixClass::created_matrices, MatrixClass::allocated_matrices, MatrixClass::destroyed_matrices, MatrixClass::desallocated_matrices);
+
+    after_each(this, "~MatrixClass()");
 }
 
 // make the print check the max in the column and not in the entire matrix
@@ -462,6 +516,8 @@ void MatrixClass::print(size_t precision, bool sign)
         printf("]\n");
     }
     printf("]\n");
+
+    after_each(this, "print");
 }
 
 void MatrixClass::print_line(size_t line, size_t precision, bool sign)
@@ -488,6 +544,8 @@ void MatrixClass::print_line(size_t line, size_t precision, bool sign)
         printf("%s", j == this->m - 1 ? "\0" : ", ");
     }
     printf("]");
+
+    after_each(this, "print_line");
 }
 
 void MatrixClass::print_col(size_t column, size_t precision, bool sign)
@@ -513,6 +571,8 @@ void MatrixClass::print_col(size_t column, size_t precision, bool sign)
         printf("%s", i == this->n - 1 ? "\0" : ", ");
     }
     printf("]");
+
+    after_each(this, "print_col");
 }
 
 /*not set*/
@@ -585,6 +645,8 @@ float MatrixClass::get(size_t i, size_t j)
         return 0;
     }
 
+    after_each(this, "get");
+
     return this->content[i][j];
 }
 
@@ -633,49 +695,89 @@ MatrixClass *MatrixClass::multiply_matrix_matrix(MatrixClass *matrix_A, MatrixCl
 MatrixClass *MatrixClass::operator+(MatrixClass *matrix)
 {
     before_each(this, "operator");
-    return MatrixClass::add_matrix_matrix(this, matrix);
+
+    MatrixClass *result = MatrixClass::add_matrix_matrix(this, matrix);
+
+    after_each(this, "operator+");
+
+    return result;
 }
 
 MatrixClass *MatrixClass::operator-(MatrixClass *matrix)
 {
     before_each(this, "operator");
-    return MatrixClass::subtract_matrix_matrix(this, matrix);
+
+    MatrixClass *result = MatrixClass::subtract_matrix_matrix(this, matrix);
+
+    after_each(this, "operator");
+
+    return result;
 }
 
 MatrixClass *MatrixClass::operator*(MatrixClass *matrix)
 {
     before_each(this, "operator");
-    return MatrixClass::multiply_matrix_matrix(this, matrix);
+
+    MatrixClass *result = MatrixClass::multiply_matrix_matrix(this, matrix);
+
+    after_each(this, "operator");
+
+    return result;
 }
 
 MatrixClass *MatrixClass::operator/(MatrixClass *matrix)
 {
     before_each(this, "operator");
-    return MatrixClass::divide_matrix_matrix(this, matrix);
+
+    MatrixClass *result = MatrixClass::divide_matrix_matrix(this, matrix);
+
+    after_each(this, "operator");
+
+    return result;
 }
 
 MatrixClass *MatrixClass::operator+(float number)
 {
     before_each(this, "operator");
-    return MatrixClass::add_matrix_float(this, number);
+
+    MatrixClass *result = MatrixClass::add_matrix_float(this, number);
+
+    after_each(this, "operator");
+
+    return result;
 }
 
 MatrixClass *MatrixClass::operator-(float number)
 {
     before_each(this, "operator");
-    return MatrixClass::substract_matrix_float(this, number);
+
+    MatrixClass *result = MatrixClass::substract_matrix_float(this, number);
+
+    after_each(this, "operator");
+
+    return result;
 }
 
 MatrixClass *MatrixClass::operator*(float number)
 {
     before_each(this, "operator");
-    return MatrixClass::multiply_matrix_float(this, number);
+
+    MatrixClass *result = MatrixClass::multiply_matrix_float(this, number);
+
+    after_each(this, "operator");
+
+    return result;
 }
 
 MatrixClass *MatrixClass::operator/(float number)
 {
     before_each(this, "operator");
-    return MatrixClass::divide_matrix_float(this, number);
+
+    MatrixClass *result = MatrixClass::divide_matrix_float(this, number);
+
+    after_each(this, "operator");
+
+    return result;
 }
 
 /*
@@ -700,21 +802,33 @@ MatrixClass *MatrixClass::operator++()
 {
     before_each(this, "operator");
 
-    return MatrixClass::add_matrix_float(this, 1);
+    auto result = MatrixClass::add_matrix_float(this, 1);
+
+    after_each(this, "operator");
+
+    return result;
 }
 
 MatrixClass *MatrixClass::operator--()
 {
     before_each(this, "operator");
 
-    return MatrixClass::substract_matrix_float(this, 1);
+    auto result = MatrixClass::substract_matrix_float(this, 1);
+
+    after_each(this, "operator");
+
+    return result;
 }
 
 float *MatrixClass::operator[](size_t i)
 {
     before_each(this, "operator");
 
-    return this->content[i];
+    auto result = this->content[i];
+
+    after_each(this, "operator");
+
+    return result;
 }
 
 std::pair<size_t, size_t> MatrixClass::max(MatrixType type, bool absolute)
@@ -736,6 +850,9 @@ std::pair<size_t, size_t> MatrixClass::max(MatrixType type, bool absolute)
                                 max.second = j;
                             }
                         } });
+
+    after_each(this, "max");
+
     return max;
 }
 
@@ -749,6 +866,8 @@ size_t MatrixClass::max_line(size_t line, bool abs)
                         {
         if (element > matrix[line][mJ])
             mJ = j; });
+
+    after_each(this, "max_line");
 
     return mJ;
 }
@@ -769,6 +888,8 @@ size_t MatrixClass::max_column(size_t column, bool absolute)
                                 if (abs(element) > abs(matrix[mI][column]))
                                     mI = i;
                             } });
+
+    after_each(this, "max_column");
 
     return mI;
 }
@@ -792,6 +913,9 @@ std::pair<size_t, size_t> MatrixClass::min(MatrixType type, size_t *maxI, size_t
                                 max.second = j;
                             }
                         } });
+
+    after_each(this, "min");
+
     return max;
 }
 
@@ -811,6 +935,8 @@ size_t MatrixClass::min_line(size_t line, bool absolute)
                                 if (abs(element) < abs(matrix[line][mJ]))
                                     mJ = j;
                             } });
+
+    after_each(this, "min_line");
 
     return mJ;
 }
@@ -832,49 +958,55 @@ size_t MatrixClass::min_column(size_t column, bool absolute)
                                     mI = i;
                             } });
 
+    after_each(this, "min_column");
+
     return mI;
 }
 
-MatrixClass &MatrixClass::dot(MatrixClass &matrix)
+MatrixClass *MatrixClass::dot(MatrixClass *matrix)
 {
     before_each(this, "dot");
 
-    return MatrixClass::matrix_multiplication(*this, matrix);
+    auto result = MatrixClass::matrix_multiplication(this, matrix);
+
+    after_each(this, "dot");
+
+    return result;
 }
 
 /*not set*/
-MatrixClass &MatrixClass::matrix_multiplication(MatrixClass &matrix_A, MatrixClass &matrix_B)
+MatrixClass *MatrixClass::matrix_multiplication(MatrixClass *matrix_A, MatrixClass *matrix_B)
 {
     MatrixClass *result;
 
-    if (matrix_A.m != matrix_B.n)
+    if (matrix_A->m != matrix_B->n)
     {
         printf("[multiply_matrix_matrix]: number of lines and number of columns must be equal\n");
-        return (*new MatrixClass());
+        return NULL;
     }
 
-    result = new MatrixClass(matrix_A.n, matrix_B.m);
+    result = new MatrixClass(matrix_A->n, matrix_B->m);
 
-    for (size_t i = 0; i < matrix_A.n; i++)
-        for (size_t j = 0; j < matrix_B.m; j++)
+    for (size_t i = 0; i < matrix_A->n; i++)
+        for (size_t j = 0; j < matrix_B->m; j++)
             (*result)[i][j] = multiply_matrix_line_matrix_column(matrix_A, matrix_B, i, j);
 
-    return *result;
+    return result;
 }
 
 /*not set*/
-float MatrixClass::multiply_matrix_line_matrix_column(MatrixClass &matrix_A, MatrixClass &matrix_B, size_t LINE, size_t COLUMN)
+float MatrixClass::multiply_matrix_line_matrix_column(MatrixClass *matrix_A, MatrixClass *matrix_B, size_t LINE, size_t COLUMN)
 {
     float result = 0;
 
-    if (LINE > matrix_A.n - 1 || COLUMN > matrix_B.m - 1)
+    if (LINE > matrix_A->n - 1 || COLUMN > matrix_B->m - 1)
     {
         printf("[multiply_matrix_line_matrix_column]: given an invalid LINE or COLUMN\n");
         return 0;
     }
 
-    for (size_t i = 0; i < matrix_A.m; i++)
-        result += (matrix_A[LINE][i] * matrix_B[i][COLUMN]);
+    for (size_t i = 0; i < matrix_A->m; i++)
+        result += (matrix_A->get(LINE, i) * matrix_B->get(i, COLUMN));
 
     return result;
 }
@@ -913,6 +1045,8 @@ float MatrixClass::determinent()
         // destroy_matrix(cofact);
     }
 
+    after_each(this, "determinent");
+
     return result;
 }
 
@@ -930,6 +1064,8 @@ float MatrixClass::trace()
 
     this->for_each(DIAGONAL, [&result](size_t i, size_t j, float element) -> void
                    { result += element; });
+
+    after_each(this, "trace");
 
     return result;
 }
@@ -956,6 +1092,8 @@ MatrixClass *MatrixClass::select_lines(size_t start, size_t end)
     for (size_t i = start; i <= end; i++)
         for (size_t j = 0; j < this->m; j++)
             (*result)[i - start][j] = (*this)[i][j];
+
+    after_each(this, "select_lines");
 
     return result;
 }
@@ -984,6 +1122,8 @@ MatrixClass *MatrixClass::select_columns(size_t start, size_t end)
         for (size_t j = start; j <= end; j++)
             (*result)[i][j - start] = (*this)[i][j];
 
+    after_each(this, "select_columns");
+
     return result;
 }
 
@@ -1002,6 +1142,8 @@ MatrixClass *MatrixClass::select_(size_t startLine, size_t endLine, size_t start
 
     delete temp;
     // destroy_matrix(temp);
+
+    after_each(this, "select_");
 
     return result;
 }
@@ -1026,6 +1168,8 @@ MatrixClass *MatrixClass::delete_lines(size_t start, size_t end)
     for (size_t i = end + 1; i < this->n; i++)
         for (size_t j = 0; j < this->m; j++)
             (*result)[i - end][j] = (*this)[i][j];
+
+    after_each(this, "delete_lines");
 
     return result;
 }
@@ -1053,6 +1197,8 @@ MatrixClass *MatrixClass::delete_columns(size_t start, size_t end)
             (*this)[i][j - end] = (*this)[i][j];
     }
 
+    after_each(this, "delete_columns");
+
     return result;
 }
 
@@ -1075,6 +1221,8 @@ MatrixClass *MatrixClass::crop(size_t startLine, size_t endLine, size_t startCol
 
     // destroy_matrix(temp);
 
+    after_each(this, "crop");
+
     return result;
 }
 
@@ -1094,6 +1242,8 @@ bool MatrixClass::is_diagonal()
         }
     }
 
+    after_each(this, "is_diagonal");
+
     return true;
 }
 
@@ -1103,6 +1253,8 @@ bool MatrixClass::is_triangular()
 
     if (!this->is_square())
         return false;
+
+    after_each(this, "is_triangular");
 
     return this->is_lower_triangular() || this->is_upper_triangular();
 }
@@ -1119,6 +1271,8 @@ bool MatrixClass::is_lower_triangular()
             if ((*this)[i][j] != 0)
                 return false;
 
+    after_each(this, "is_lower_triangular");
+
     return true;
 }
 
@@ -1134,12 +1288,16 @@ bool MatrixClass::is_upper_triangular()
             if ((*this)[i][j] != 0)
                 return false;
 
+    after_each(this, "is_upper_triangular");
+
     return true;
 }
 
 bool MatrixClass::is_null()
 {
     before_each(this, "is_null");
+
+    after_each(this, "is_null");
 
     return this->content == NULL;
 }
@@ -1149,6 +1307,7 @@ bool MatrixClass::is_square()
     before_each(this, "is_square");
 
     // TODO: check that it's not null also
+    after_each(this, "is_square");
 
     return this->n == this->m;
 }
@@ -1171,6 +1330,8 @@ void MatrixClass::read(MatrixType type)
             scanf("%f", &result);
             return result; },
         true);
+
+    after_each(this, "read");
 }
 
 /*not set*/
@@ -1270,6 +1431,8 @@ bool MatrixClass::one(MatrixType type, BooleanProducer boolean_producer)
         if (boolean_producer(i, j, element))
             result = true; });
 
+    after_each(this, "one");
+
     return result;
 }
 
@@ -1281,6 +1444,8 @@ float MatrixClass::reduce(MatrixType type, Reducer reducer, float initialValue)
 
     this->for_each(type, [&reducer, &result](size_t i, size_t j, float value) -> void
                    { result = reducer(result, i, j, value); });
+
+    after_each(this, "reduce");
 
     return result;
 }
@@ -1294,6 +1459,8 @@ float MatrixClass::reduce_line(size_t line, Reducer reducer, float initialValue)
     this->for_each_line(line, [&reducer, &result](size_t i, size_t j, float value) -> void
                         { result += reducer(result, i, j, value); });
 
+    after_each(this, "reduce_line");
+
     return result;
 }
 
@@ -1306,6 +1473,8 @@ float MatrixClass::reduce_column(size_t column, Reducer reducer, float initialVa
     this->for_each_column(column, [&reducer, &result](size_t i, size_t j, float value) -> void
                           { result += reducer(result, i, j, value); });
 
+    after_each(this, "reduce_column");
+
     return result;
 }
 
@@ -1317,6 +1486,8 @@ bool MatrixClass::line_one(size_t line, BooleanProducer boolean_producer)
         if (boolean_producer(line, j, (*this)[line][j]))
             return true;
 
+    after_each(this, "line_one");
+
     return false;
 }
 
@@ -1327,6 +1498,8 @@ bool MatrixClass::column_one(size_t column, BooleanProducer boolean_producer)
     for (size_t i = 0; i < this->n; i++)
         if (boolean_producer(i, column, (*this)[i][column]))
             return true;
+
+    after_each(this, "column_one");
 
     return false;
 }
@@ -1342,6 +1515,8 @@ bool MatrixClass::all(MatrixType type, BooleanProducer boolean_producer)
         if (!boolean_producer(i, j, element))
             result = false; });
 
+    after_each(this, "all");
+
     return result;
 }
 
@@ -1353,6 +1528,8 @@ bool MatrixClass::line_all(size_t line, BooleanProducer boolean_producer)
         if (!boolean_producer(line, j, (*this)[line][j]))
             return false;
 
+    after_each(this, "line_all");
+
     return true;
 }
 
@@ -1363,6 +1540,8 @@ bool MatrixClass::column_all(size_t column, BooleanProducer boolean_producer)
     for (size_t i = 0; i < this->n; i++)
         if (!boolean_producer(i, column, (*this)[i][column]))
             return false;
+
+    after_each(this, "column_all");
 
     return true;
 }
@@ -1393,6 +1572,8 @@ MatrixClass *MatrixClass::inverse(bool destructive)
     delete cofactor_matrix;
     delete transpose_cofactor_matrix;
 
+    after_each(this, "inverse");
+
     return result;
 }
 
@@ -1417,6 +1598,8 @@ MatrixClass *MatrixClass::transpose(bool destructive)
 
         delete save;
 
+        after_each(this, "transpose");
+
         return this;
     }
     else
@@ -1426,6 +1609,8 @@ MatrixClass *MatrixClass::transpose(bool destructive)
         for (size_t i = 0; i < this->n; i++)
             for (size_t j = 0; j < this->m; j++)
                 (*result)[j][i] = (*this)[i][j];
+
+        after_each(this, "transpose");
 
         return result;
     }
@@ -1449,6 +1634,8 @@ MatrixClass *MatrixClass::cofactor()
             delete cofact;
         }
     }
+
+    after_each(this, "cofactor");
 
     return result;
 }
@@ -1481,6 +1668,8 @@ MatrixClass *MatrixClass::cofactor_of(size_t line, size_t column)
 
     free(array);
 
+    after_each(this, "cofactor_of");
+
     return result;
 }
 
@@ -1496,6 +1685,8 @@ MatrixClass::MatrixClass()
         printf(COLOR_GREEN "[MatrixClass]:" COLOR_RESET "empty matrix got created\n");
 
     MatrixClass::created_matrices++;
+
+    after_each(this, "MatrixClass");
 }
 
 MatrixClass *MatrixClass::permute_lines(size_t L1, size_t L2, bool destructive)
@@ -1511,6 +1702,8 @@ MatrixClass *MatrixClass::permute_lines(size_t L1, size_t L2, bool destructive)
         (*result)[L1][j] = (*result)[L2][j];
         (*result)[L2][j] = temp;
     }
+
+    after_each(this, "permute_lines");
 
     return result;
 }
@@ -1528,6 +1721,8 @@ MatrixClass *MatrixClass::permute_columns(size_t C1, size_t C2, bool destructive
         (*result)[i][C1] = (*result)[i][C2];
         (*result)[i][C2] = temp;
     }
+
+    after_each(this, "permute_columns");
 
     return result;
 }
@@ -1606,6 +1801,8 @@ MatrixClass::MatrixClass(size_t n, size_t m)
 
     if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_CREATION))
         printf(COLOR_GREEN "[MatrixClass]:" COLOR_RESET "matrix got created\n");
+
+    after_each(this, "MatrixClass(size_t, size_t)");
 }
 
 float **MatrixClass::allocate_matrix(size_t n, size_t m)
@@ -1637,7 +1834,11 @@ MatrixClass *MatrixClass::copy()
 {
     before_each(this, "copy");
 
-    return MatrixClass::copy(this);
+    auto result = MatrixClass::copy(this);
+
+    after_each(this, "copy");
+
+    return result;
 }
 
 /*not set*/
@@ -1773,6 +1974,8 @@ void MatrixClass::for_each(MatrixType type, Consumer consumer)
         return;
         break;
     }
+
+    after_each(this, "fpr_each");
 }
 void MatrixClass::for_each_line(size_t line, Consumer consumer)
 {
@@ -1780,6 +1983,8 @@ void MatrixClass::for_each_line(size_t line, Consumer consumer)
 
     for (size_t j = 0; j < this->m; j++)
         consumer(line, j, (*this)[line][j]);
+
+    after_each(this, "for_each_line");
 }
 
 void MatrixClass::for_each_column(size_t column, Consumer consumer)
@@ -1788,6 +1993,8 @@ void MatrixClass::for_each_column(size_t column, Consumer consumer)
 
     for (size_t i = 0; i < this->n; i++)
         consumer(i, column, (*this)[i][column]);
+
+    after_each(this, "for_each_column");
 }
 
 void MatrixClass::destroy()
@@ -1795,6 +2002,8 @@ void MatrixClass::destroy()
     before_each(this, "destroy");
 
     delete this;
+
+    after_each(this, "destroy");
 }
 
 MatrixClass *MatrixClass::map(MatrixType type, Producer producer, bool inplace)
@@ -1838,6 +2047,8 @@ MatrixClass *MatrixClass::map(MatrixType type, Producer producer, bool inplace)
         break;
     }
 
+    after_each(this, "map");
+
     return result;
 }
 MatrixClass *MatrixClass::map_line(size_t line, Producer producer, bool inplace)
@@ -1848,6 +2059,8 @@ MatrixClass *MatrixClass::map_line(size_t line, Producer producer, bool inplace)
 
     for (size_t j = 0; j < this->m; j++)
         (*result)[line][j] = producer(line, j, (*this)[line][j]);
+
+    after_each(this, "map_line");
 
     return result;
 }
@@ -1860,6 +2073,8 @@ MatrixClass *MatrixClass::map_column(size_t column, Producer producer, bool inpl
 
     for (size_t i = 0; i < this->n; i++)
         (*result)[i][column] = producer(i, column, (*this)[i][column]);
+
+    after_each(this, "map_column");
 
     return result;
 }

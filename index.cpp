@@ -6,35 +6,31 @@
 #include "util.hpp"
 #include "matrix.hpp"
 
-/*study unions*/
-
 int main()
 {
+
     Sle::srand(time(NULL));
-    Sle::set_debug_options(SystemDebug::SYSTEM_ALL);
+    Sle::set_debug_options(SystemDebug::SYSTEM_NONE);
 
     MatrixClass::srand(time(NULL));
-    MatrixClass::set_debug_options(MatrixDebug::MATRIX_ALL);
+    MatrixClass::set_debug_options(MatrixDebug::MATRIX_NONE);
+
+    srand(time(NULL));
 
     std::cout << "start-program" << std::endl;
 
-    float sum = 0;
-    MatrixClass *matrix = MatrixClass::create_matrix_random_float(MatrixType::NORMAL, 3, 2, 0, 10)->set_name("matrix");
+    MatrixClass *vector = MatrixClass::create_matrix_random_float(NORMAL, 1, 5)->set_name("random-vector");
 
-    matrix->print();
+    vector->print();
 
-    matrix->transpose(true)->print();
+    float medium = vector->reduce(
+        NORMAL, [size = (vector->size().first * vector->size().second)](float acumulator, size_t i, size_t j, float value) -> float
+        { return acumulator + value / size; },
+        0);
 
-    matrix->round(true)->print();
+    printf("medium=%f\n", medium);
 
-    sum = matrix->reduce(NORMAL, [](float acumulator, size_t i, size_t j, float value) -> float
-                         { return acumulator + value; });
-
-    printf("sum: %f\n", sum);
-
-    matrix->destroy();
-
-    std::cout << "end-program" << std::endl;
+    vector->destroy();
 
     return 0;
 }
