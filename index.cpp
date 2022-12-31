@@ -16,20 +16,13 @@ int main()
 
     srand(time(NULL));
 
-    std::cout << "start-program" << std::endl;
+    printf("[start]\n");
 
-    MatrixClass *vector = MatrixClass::create_matrix_random_float(NORMAL, 1, 5)->set_name("random-vector");
+    MatrixClass *matrix = MatrixClass::create_matrix_random_int(NORMAL, 3, 3);
 
-    vector->print();
+    matrix->print();
 
-    float medium = vector->reduce(
-        NORMAL, [size = (vector->size().first * vector->size().second)](float acumulator, size_t i, size_t j, float value) -> float
-        { return acumulator + value / size; },
-        0);
-
-    printf("medium=%f\n", medium);
-
-    vector->destroy();
+    matrix->destroy();
 
     return 0;
 }

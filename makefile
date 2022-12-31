@@ -1,7 +1,7 @@
 CC=g++
 CPPFLAGS=-std=c++17
 
-VPATH=lib
+VPATH=lib build
 
 CPPFILES=util.cpp matrix.cpp sle.cpp index.cpp
 CPPOBJECTS=util.o matrix.o sle.o index.o
@@ -14,13 +14,15 @@ all:$(BINARY)
 
 $(BINARY):$(CPPOBJECTS)
 	$(CC) -o $@ $^
+	mv *.o build/
 
 %.o:%.c
 	$(CC) $(CPPFLAGS) -c -o $@ $^
 
 run:$(BINARY)
-	./$(BINARY)
+	@./$(BINARY)
 
 clean:
+	echo "test"
 	rm -rf $(CPPOBJECTS)
-#	rm -rf $(BINARY) $(CPPOBJECTS)
+	rm -rf build/*

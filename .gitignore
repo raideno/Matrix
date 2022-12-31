@@ -6,3 +6,4 @@ test.cpp
 image.bmp
 *.o
 program
+build
