@@ -1,7 +1,7 @@
 #ifndef __SLE_HPP__
 #define __SLE_HPP__
 
-#include "matrix.hpp"
+#include "../matrix/matrix.hpp"
 
 enum SystemDebug
 {

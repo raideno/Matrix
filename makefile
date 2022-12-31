@@ -1,7 +1,7 @@
 CC=g++
 CPPFLAGS=-std=c++17
 
-VPATH=lib build
+VPATH=$(wildcard lib/* build)
 
 CPPFILES=util.cpp matrix.cpp sle.cpp index.cpp
 CPPOBJECTS=util.o matrix.o sle.o index.o

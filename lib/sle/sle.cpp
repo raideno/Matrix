@@ -1,7 +1,7 @@
 #include <math.h>
 
 #include "sle.hpp"
-#include "util.hpp"
+#include "../util/util.hpp"
 
 void Sle::set_matrix(MatrixClass *matrix)
 {

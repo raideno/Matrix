@@ -6,8 +6,8 @@
 
 #include <iostream>
 
-#include "util.hpp"
 #include "matrix.hpp"
+#include "../util/util.hpp"
 
 MatrixClass *MatrixClass::limit(int startLine, int endLine, int startColumn, int endColumn, bool temp)
 {
