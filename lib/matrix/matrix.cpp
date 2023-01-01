@@ -658,6 +658,8 @@ float MatrixClass::get(size_t i, size_t j, float default_return_value)
 
     after_each(this, "get");
 
+    // printf("\n[get]: %ld, %ld => %f\n", i, j, this->content[i][j]);
+
     return this->content[i][j];
 }
 

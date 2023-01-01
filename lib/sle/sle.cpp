@@ -177,6 +177,56 @@ Sle *Sle::create_hilbert_system(std::size_t order)
     return new Sle(matrix, vector);
 }
 
+// old:
+/*
+Sle *Sle::gauss_jordan(bool inplace)
+{
+    // check that it can work, and that pivots aren't null
+
+    // always check that the system isn't empty
+
+    Sle *result = inplace ? this : this->copy();
+
+    for (size_t k = 0; k < result->order; k++)
+    {
+        float a = result->matrix->get(k, k);
+        for (size_t i = k + 1; i < order; i++)
+        {
+            float b = result->matrix->get(i, k);
+            for (size_t j = k; j < order; j++)
+            {
+                (*result->matrix)[i][j] -= ((b / a) * result->matrix->get(k, j));
+            }
+            (*result->vector)[i][0] -= ((b / a) * result->vector->get(k, 0));
+        }
+
+        float temp = 1 / result->matrix->get(k, k);
+
+        result->matrix->map_line(
+            k, [temp](std::size_t i, std::size_t j, float element) -> float
+            { return element * temp; },
+            inplace);
+        (*result->vector)[k][0] *= temp;
+    }
+
+    for (int k = this->order - 1; k >= 0; k--)
+    {
+        float a = result->matrix->get(k, k);
+        for (int i = k - 1; i >= 0; i--)
+        {
+            float b = result->matrix->get(i, k);
+            for (size_t j = 0; j < this->order; j++)
+            {
+                (*result->matrix)[i][j] -= ((b / a) * result->matrix->get(k, j));
+            }
+            (*result->vector)[i][0] -= ((b / a) * result->vector->get(k, 0));
+        }
+    }
+
+    return result;
+}
+*/
+
 Sle *Sle::gauss_jordan(bool inplace)
 {
     // check that it can work, and that pivots aren't null
