@@ -2,6 +2,7 @@
 
 #include "sle.hpp"
 #include "../util/util.hpp"
+#include "../matrix/matrix.hpp"
 
 void Sle::set_matrix(MatrixClass *matrix)
 {

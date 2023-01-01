@@ -6,8 +6,8 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include <list>
 #include <iostream>
-
 #include <functional>
 
 // functions to round, to transform to integer
@@ -58,13 +58,6 @@ private:
     std::size_t n = 0;
     std::size_t m = 0;
 
-    int startLine = 0;
-    int endLine = 0;
-    int startColumn = -1;
-    int endColumn = -1;
-
-    int uses = 0;
-
     inline static unsigned int seed = 45;
     inline static MatrixDebug debug_options = MatrixDebug::MATRIX_NONE;
 
@@ -73,6 +66,8 @@ private:
 
     inline static std::size_t created_matrices = 0;
     inline static std::size_t destroyed_matrices = 0;
+
+    inline static std::list<MatrixClass *> matrices;
 
     static void desallocate(MatrixClass *matrix);
     static void desallocate_matrices(size_t n_args, ...);
@@ -98,8 +93,6 @@ public:
 
     MatrixClass *convolution(MatrixClass *matrix);
 
-    MatrixClass *limit(int startLine = 0, int endLine = -1, int startColumn = 0, int endColumn = -1, bool temp = true);
-
     static void srand(unsigned int seed);
 
     static void set_debug_options(MatrixDebug debug);
@@ -116,8 +109,8 @@ public:
     static MatrixClass *create_matrix_random_float(MatrixType type, size_t n, size_t m, float min = 0, float max = 1);
     /*----*/
 
-    float get(size_t i, size_t j);
     void set(size_t i, size_t j, float element);
+    float get(size_t i, size_t j, float default_return_value = 0);
 
     const std::string &get_name();
     MatrixClass *set_name(const std::string &name);
@@ -156,6 +149,11 @@ public:
     MatrixClass *transpose(bool destructive = false);
     MatrixClass *cofactor();
     MatrixClass *cofactor_of(size_t line, size_t column);
+
+    bool have_center();
+    std::pair<int, int> get_center();
+
+    MatrixClass *flip();
 
     static MatrixClass *concatenate_vertical(size_t n_args, ...);
     static MatrixClass *concatenate_horizontal(size_t n_args, ...);

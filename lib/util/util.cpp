@@ -14,16 +14,7 @@ int random_integer(int min, int max, unsigned int seed)
     return (rand() % (max - min)) + min;
 }
 
-int prompt(const char *string)
-{
-    int n;
-
-    printf("%s", string);
-    scanf("%d", &n);
-
-    return n;
-}
-
+/*
 float power(float n, size_t p)
 {
     float result = 1;
@@ -33,6 +24,7 @@ float power(float n, size_t p)
 
     return result;
 }
+*/
 
 float max(float a, float b)
 {
@@ -89,7 +81,7 @@ bool print_float(float number, size_t size, size_t precision, char padding, bool
     for (size_t i = iPartDigits; i < size; i++)
         printf("%c", padding);
 
-    fraction = fraction * power(10, precision);
+    fraction = fraction * std::pow(10, precision);
 
     fractionPartDigits = count_digits((int)fraction);
 

@@ -9,20 +9,31 @@
 #include "matrix.hpp"
 #include "../util/util.hpp"
 
-MatrixClass *MatrixClass::limit(int startLine, int endLine, int startColumn, int endColumn, bool temp)
+bool MatrixClass::have_center()
 {
-    before_each(this, "limit");
+    auto [n, m] = this->size();
 
-    this->startLine = startLine;
-    this->endLine = endLine;
-    this->startColumn = startColumn;
-    this->endColumn = endColumn;
+    return !(n % 2 == 0 || m % 2 == 0);
+}
 
-    this->uses = temp ? 1 : -1;
+std::pair<int, int> MatrixClass::get_center()
+{
+    auto [n, m] = this->size();
 
-    // after_each(this, "limit");
+    if (!this->have_center())
+        return std::pair(-1, -1);
+    else
+        return std::pair(((n + 1) / 2) - 1, ((m + 1) / 2) - 1);
+}
 
-    return this;
+MatrixClass *MatrixClass::flip()
+{
+    MatrixClass *result = this->map(
+        NORMAL, [this](std::size_t i, std::size_t j, float value) -> float
+        { 
+            auto [n, m] = this->size();
+            return this->get(n - i - 1, m - j - 1); });
+    return result;
 }
 
 void MatrixClass::before_each(MatrixClass *matrix, const std::string &name)
@@ -35,8 +46,6 @@ void MatrixClass::after_each(MatrixClass *matrix, const std::string &name)
 {
     if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_MISC))
         printf(COLOR_BOLD_WHITE "[MatrixClass-before_each]" COLOR_RESET "finished %s for %s matrix\n", name.c_str(), matrix->name.c_str());
-
-    matrix->uses = matrix->uses == -1 ? -1 : matrix->uses - 1;
 }
 
 MatrixClass *MatrixClass::convolution(MatrixClass *matrix)
@@ -270,13 +279,13 @@ MatrixClass *MatrixClass::replace_lines(MatrixClass *matrix_A, size_t Afrom, siz
     if (matrix_A->m != matrix_B->m)
     {
         printf("[replace_lines]: the two matrices aren't compatible\n");
-        return new MatrixClass();
+        return NULL;
     }
 
     if ((Ato - Afrom != Bto - Bfrom) || (Afrom > Ato || Bfrom > Bto) || (Afrom > matrix_A->n - 1 || Bfrom > matrix_B->n - 1 || Ato > matrix_A->n - 1 || Bto > matrix_B->n - 1))
     {
         printf("[replace_lines]: invalid params\n");
-        return new MatrixClass();
+        return NULL;
     }
 
     result = matrix_A->copy();
@@ -296,13 +305,13 @@ MatrixClass *MatrixClass::replace_columns(MatrixClass *matrix_A, size_t Afrom, s
     if (matrix_A->n != matrix_B->n)
     {
         printf("[replace_columns]: the two matrices aren't compatible\n");
-        return new MatrixClass();
+        return NULL;
     }
 
     if ((Ato - Afrom != Bto - Bfrom) || (Afrom > Ato || Bfrom > Bto) || (Afrom > matrix_A->m - 1 || Bfrom > matrix_B->m - 1 || Ato > matrix_A->m - 1 || Bto > matrix_B->m - 1))
     {
         printf("[replace_columns]: invalid params\n");
-        return new MatrixClass();
+        return NULL;
     }
 
     result = matrix_A->copy();
@@ -322,7 +331,7 @@ MatrixClass *MatrixClass::replace_lines_with(MatrixClass *matrix_A, size_t Afrom
     if ((Afrom > Ato) || (Afrom > matrix_A->n - 1 || Ato > matrix_A->n - 1))
     {
         printf("[replace_lines]: invalid params\n");
-        return new MatrixClass();
+        return NULL;
     }
 
     result = matrix_A->copy();
@@ -342,7 +351,7 @@ MatrixClass *MatrixClass::replace_columns_with(MatrixClass *matrix_A, size_t Afr
     if ((Afrom > Ato) || (Afrom > matrix_A->m - 1 || Ato > matrix_A->m - 1))
     {
         printf("[replace_columns]: invalid params\n");
-        return new MatrixClass();
+        return NULL;
     }
 
     result = matrix_A->copy();
@@ -629,20 +638,22 @@ std::ostream &operator<<(std::ostream &os, MatrixClass &matrix)
     return os;
 }
 
-float MatrixClass::get(size_t i, size_t j)
+float MatrixClass::get(size_t i, size_t j, float default_return_value)
 {
     before_each(this, "get");
 
     if (i > this->n - 1)
     {
-        printf("[get]: invalid i provided\n");
-        return 0;
+        if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_MISC))
+            printf(COLOR_BOLD_WHITE "[get]:" COLOR_RESET "invalid i provided\n");
+        return default_return_value;
     }
 
     if (j > this->m - 1)
     {
-        printf("[get]: invalid j provided\n");
-        return 0;
+        if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_MISC))
+            printf(COLOR_BOLD_WHITE "[get]:" COLOR_RESET "invalid i provided\n");
+        return default_return_value;
     }
 
     after_each(this, "get");
@@ -658,7 +669,7 @@ MatrixClass *MatrixClass::divide_matrix_matrix(MatrixClass *matrix_A, MatrixClas
     if (matrix_A->size() != matrix_B->size())
     {
         printf("[divide_matrix_matrix]: matrices have to be of the same dimensions\n");
-        return new MatrixClass();
+        return NULL;
     }
 
     result = new MatrixClass(matrix_A->n, matrix_A->m);
@@ -679,7 +690,7 @@ MatrixClass *MatrixClass::multiply_matrix_matrix(MatrixClass *matrix_A, MatrixCl
     if (matrix_A->size() != matrix_B->size())
     {
         printf("[multiply_matrix_matrix]: matrices have to be of the same dimensions\n");
-        return new MatrixClass();
+        return NULL;
     }
 
     result = new MatrixClass(matrix_A->n, matrix_A->m);
@@ -1037,7 +1048,7 @@ float MatrixClass::determinent()
         MatrixClass *cofact = this->cofactor_of(0, i)->set_name("cofactor-matrix");
         /*0 in 0 + i in power fonction is for the j (i) but since we selected the first line*/
         /*should we let the "+1" or no ? or replace it with a "+1" ? and why exactly "+2" ? why it wouldn't work normaly ?*/
-        result += power(-1, 0 + i + 2) * (*this)[0][i] * cofact->determinent();
+        result += std::pow(-1, 0 + i + 2) * (*this)[0][i] * cofact->determinent();
 
         delete cofact;
         // TODO: fix the matrix destruction
@@ -1077,13 +1088,13 @@ MatrixClass *MatrixClass::select_lines(size_t start, size_t end)
     if (start > end)
     {
         printf("[select_lines]: start is bigger than end\n");
-        return new MatrixClass();
+        return NULL;
     }
 
     if (start > this->n - 1 || end > this->n - 1)
     {
         printf("[select_lines]: received invalid startLine or endLine\n");
-        return new MatrixClass();
+        return NULL;
     }
 
     size_t lines = end - start + 1;
@@ -1106,13 +1117,13 @@ MatrixClass *MatrixClass::select_columns(size_t start, size_t end)
     if (start > end)
     {
         printf("[select_lines]: start is bigger than end\n");
-        return new MatrixClass();
+        return NULL;
     }
 
     if (start > this->m - 1 || end > this->m - 1)
     {
         printf("[select_columns]: received invalid startColumn or endColumn\n");
-        return new MatrixClass();
+        return NULL;
     }
 
     size_t columns = end - start + 1;
@@ -1155,7 +1166,7 @@ MatrixClass *MatrixClass::delete_lines(size_t start, size_t end)
     if (start > this->n - 1 || end > this->n - 1)
     {
         printf("[delete_lines]: received invalid startLine or endLine\n");
-        return new MatrixClass();
+        return NULL;
     }
 
     size_t lines = this->n - (end - start + 1);
@@ -1182,7 +1193,7 @@ MatrixClass *MatrixClass::delete_columns(size_t start, size_t end)
     if (start > this->m - 1 || end > this->m - 1)
     {
         printf("[delete_columns]: received invalid startColumn or endColumn\n");
-        return new MatrixClass();
+        return NULL;
     }
 
     size_t columns = this->m - (end - start + 1);
@@ -1560,7 +1571,7 @@ MatrixClass *MatrixClass::inverse(bool destructive)
     if (det == 0)
     {
         printf("[inverse_matrix]: determinant is equal to 0\n");
-        return new MatrixClass();
+        return NULL;
     }
 
     cofactor_matrix = this->cofactor();
@@ -1630,7 +1641,8 @@ MatrixClass *MatrixClass::cofactor()
         {
             MatrixClass *cofact = this->cofactor_of(i, j);
             float det_cofact = cofact->determinent();
-            (*result)[i][j] = power(-1, i + 1 + j + 1) * det_cofact;
+            /*(*result)[i][j] = power(-1, i + 1 + j + 1) * det_cofact;*/
+            (*result)[i][j] = std::pow(-1, i + 1 + j + 1) * det_cofact;
             delete cofact;
         }
     }
@@ -1801,6 +1813,8 @@ MatrixClass::MatrixClass(size_t n, size_t m)
 
     if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_CREATION))
         printf(COLOR_GREEN "[MatrixClass]:" COLOR_RESET "matrix got created\n");
+
+    this->matrices.push_front(this);
 
     after_each(this, "MatrixClass(size_t, size_t)");
 }
