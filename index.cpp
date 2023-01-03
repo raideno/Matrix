@@ -65,22 +65,24 @@ int main()
 {
     printf("[start]\n");
 
-    uint8_t colors[3][4] = {{255, 255, 0, 0},
-                            {255, 0, 255, 0},
-                            {255, 0, 0, 255}};
+    uint8_t colors[3][4] = {{255, 47, 80, 30},
+                            {255, 175, 255, 0},
+                            {255, 222, 50, 255}};
 
     BitMapFile *file = read_bit_map_file("./images/image-2.bmp");
 
+    file->content->for_each(NORMAL, [](size_t i, size_t j, Pixel pixel) -> void
+                            { 
+        printf("pixel[%ld][%ld]: ", i, j);
+        pixel.print();
+        printf("\n"); });
+
     for (size_t i = 0; i < file->height; i++)
     {
-        for (size_t j = 0; j < file->width; j++)
-        {
-            size_t index = i + j * file->width;
-            file->content[index].alpha = colors[i % 3][0];
-            file->content[index].red = colors[i % 3][1];
-            file->content[index].green = colors[i % 3][2];
-            file->content[index].blue = colors[i % 3][3];
-        }
+        file->content->map_line(
+            i, [](size_t i, size_t j, Pixel pixel) -> Pixel
+            { return i % 2 == 0 ? Pixel(255, 255, 255, 255) : Pixel(255, 0, 0, 0); },
+            true);
     }
 
     persist_changes(file);

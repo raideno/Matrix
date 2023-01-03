@@ -16,19 +16,83 @@ enum DibHeaderTypes
     BITMAPV5HEADER = 124,
 };
 
-struct Pixel
+class Pixel : public MatrixValue
 {
-    uint8_t red;
-    uint8_t green;
-    uint8_t blue;
-    uint8_t alpha;
+public:
+    uint8_t alpha, red, green, blue;
+
+    Pixel()
+    {
+        this->alpha = 0;
+        this->red = 0;
+        this->green = 0;
+        this->blue = 0;
+        // printf("[Pixel()]: have been called\n");
+    }
+
+    Pixel(uint32_t value)
+    {
+        Pixel::decompose_pixel(value, &this->alpha, &this->red, &this->green, &this->blue);
+    }
+
+    Pixel(uint8_t alpha, uint8_t red, uint8_t green, uint8_t blue)
+    {
+        // printf("[Pixel(Pixel)]: have been called\n");
+        this->alpha = alpha;
+        this->red = red;
+        this->green = green;
+        this->blue = blue;
+    }
+
+    ~Pixel()
+    {
+        // printf("[~Pixel()]: have been called\n");
+    }
+
+    Pixel add(Pixel value)
+    {
+        return Pixel(this->alpha + value.alpha, this->red + value.red, this->green + value.green, this->blue + value.blue);
+    }
+
+    Pixel sub(Pixel value)
+    {
+        return Pixel(this->alpha - value.alpha, this->red - value.red, this->green - value.green, this->blue - value.blue);
+    }
+    Pixel mul(Pixel value)
+    {
+        return Pixel(this->alpha * value.alpha, this->red * value.red, this->green * value.green, this->blue * value.blue);
+    }
+    Pixel div(Pixel value)
+    {
+        return Pixel(this->alpha / value.alpha, this->red / value.red, this->green / value.green, this->blue / value.blue);
+    }
+    static Pixel rand()
+    {
+        return Pixel(255, 255, 255, 255);
+    }
+    void print()
+    {
+        printf("(%u, %u, %u, %u)", this->alpha, this->red, this->green, this->blue);
+    }
+
+    static void decompose_pixel(uint32_t value, uint8_t *alpha, uint8_t *red, uint8_t *green, uint8_t *blue)
+    {
+        *alpha = (value & 0XFF000000) >> 24;
+        *red = (value & 0X00FF0000) >> 16;
+        *green = (value & 0X0000FF00) >> 8;
+        *blue = (value & 0X000000FF);
+    }
+
+    static uint32_t compose_pixel(Pixel pixel)
+    {
+        return ((pixel.alpha & 0xff) << 24) + ((pixel.red & 0xff) << 16) + ((pixel.green & 0xff) << 8) + ((pixel.blue & 0xff));
+    }
 };
-typedef struct Pixel Pixe;
 
 struct BitMapFile
 {
     FILE *file;
-    Pixel *content;
+    MatrixClass<Pixel> *content;
 
     char header_field[2];
     int size;
@@ -51,9 +115,6 @@ typedef struct BitMapFile BitMapFile;
 // BitMapFile *read_header(BitMapFile *file);
 // BitMapFile *read_dib_header(BitMapFile *file);
 // add option to tell wheter it's a 32bit pixel or 24 or 16 or 8 or ...
-void read_pixel(uint32_t value, uint8_t *alpha, uint8_t *red, uint8_t *green, uint8_t *blue);
-uint32_t create_pixel(uint8_t alpha, uint8_t red, uint8_t green, uint8_t blue);
-
 BitMapFile *read_bit_map_file(const std::string &name);
 int read_byte_at(FILE *file, std::size_t offset, std::size_t size);
 // if any changes have been made to the content proprety in BitMapFile structure it will persist them from memory to disk

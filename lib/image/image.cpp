@@ -1,17 +1,6 @@
 #include "image.hpp"
-
-void read_pixel(uint32_t value, uint8_t *alpha, uint8_t *red, uint8_t *green, uint8_t *blue)
-{
-    *alpha = (value & 0XFF000000) >> 24;
-    *red = (value & 0X00FF0000) >> 16;
-    *green = (value & 0X0000FF00) >> 8;
-    *blue = (value & 0X000000FF);
-}
-
-uint32_t create_pixel(uint8_t alpha, uint8_t red, uint8_t green, uint8_t blue)
-{
-    return ((alpha & 0xff) << 24) + ((red & 0xff) << 16) + ((green & 0xff) << 8) + ((blue & 0xff));
-}
+#include "../matrix/matrix.hpp"
+#include "../matrix/matrix.cpp"
 
 int read_byte_at(FILE *file, int offset, int size)
 {
@@ -69,14 +58,20 @@ BitMapFile *read_bit_map_file(const std::string &name)
 
     // change the size with width x height ?
     //  compare the size to width x height to see if there is a problem
-    result->content = (Pixel *)malloc(((result->size - result->offset) / (result->bits_per_pixel / 8)) * sizeof(Pixel));
+    //(Pixel *)malloc(((result->size - result->offset) / (result->bits_per_pixel / 8)) * sizeof(Pixel));
+
+    result->content = MatrixClass<Pixel>::create_matrix(result->height, result->width);
 
     fseek(file, result->offset, SEEK_SET);
     for (size_t i = 0; i < (result->size - result->offset) / (result->bits_per_pixel / 8); i++)
     {
+        // here it's the pixel number i
         uint32_t buffer;
         fread(&buffer, result->bits_per_pixel / 8, 1, file);
-        read_pixel(buffer, &result->content[i].alpha, &result->content[i].red, &result->content[i].green, &result->content[i].blue);
+        std::size_t line = i / result->width;
+        std::size_t column = i % result->width;
+        result->content->set(line, column, Pixel(buffer));
+        // read_pixel(buffer, &result->content[i].alpha, &result->content[i].red, &result->content[i].green, &result->content[i].blue);
     }
 
     return result;
@@ -90,13 +85,13 @@ void persist_changes(BitMapFile *file)
     printf("writing size: %d\n", size);
 
     fseek(file->file, file->offset, SEEK_SET);
-    // fwrite(file->content, sizeof(Pixel) * (file->width * file->height), 1, file->file);
+    // something to write everything at once
+    //  fwrite(file->content, sizeof(Pixel) * (file->width * file->height), 1, file->file);
 
-    for (size_t i = 0; i < (file->size - file->offset) / (file->bits_per_pixel / 8); i++)
-    {
-        uint32_t data = create_pixel(file->content[i].alpha, file->content[i].red, file->content[i].green, file->content[i].blue);
-        fwrite(&data, sizeof(data), 1, file->file);
-    }
+    file->content->for_each(NORMAL, [file](size_t i, size_t j, Pixel pixel) -> void
+                            {
+        uint32_t pixel_value = Pixel::compose_pixel(pixel);
+        fwrite(&pixel_value, sizeof(pixel_value), 1, file->file); });
 
     fseek(file->file, save, SEEK_SET);
 }
