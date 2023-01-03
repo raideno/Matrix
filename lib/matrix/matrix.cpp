@@ -3,20 +3,26 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stdbool.h>
 
 #include <iostream>
+
+#include <list>
+#include <functional>
 
 #include "matrix.hpp"
 #include "../util/util.hpp"
 
-bool MatrixClass::have_center()
+template <typename T>
+bool MatrixClass<T>::have_center()
 {
     auto [n, m] = this->size();
 
     return !(n % 2 == 0 || m % 2 == 0);
 }
 
-std::pair<int, int> MatrixClass::get_center()
+template <typename T>
+std::pair<int, int> MatrixClass<T>::get_center()
 {
     auto [n, m] = this->size();
 
@@ -25,10 +31,10 @@ std::pair<int, int> MatrixClass::get_center()
     else
         return std::pair(((n + 1) / 2) - 1, ((m + 1) / 2) - 1);
 }
-
-MatrixClass *MatrixClass::flip()
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::flip()
 {
-    MatrixClass *result = this->map(
+    MatrixClass<T> *result = this->map(
         NORMAL, [this](std::size_t i, std::size_t j, float value) -> float
         { 
             auto [n, m] = this->size();
@@ -36,28 +42,26 @@ MatrixClass *MatrixClass::flip()
     return result;
 }
 
-void MatrixClass::before_each(MatrixClass *matrix, const std::string &name)
+template <typename T>
+void MatrixClass<T>::before_each(MatrixClass<T> *matrix, const std::string &name)
 {
-    if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_MISC))
-        printf(COLOR_BOLD_WHITE "[MatrixClass-before_each]" COLOR_RESET "executed %s for %s matrix\n", name.c_str(), matrix->name.c_str());
+    if (MatrixClass<T>::is_debug_option_set(MatrixDebug::MATRIX_MISC))
+        printf(COLOR_BOLD_WHITE "[MatrixClass<T>-before_each]" COLOR_RESET "executed %s for %s matrix\n", name.c_str(), matrix->name.c_str());
 }
 
-void MatrixClass::after_each(MatrixClass *matrix, const std::string &name)
+template <typename T>
+void MatrixClass<T>::after_each(MatrixClass<T> *matrix, const std::string &name)
 {
-    if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_MISC))
-        printf(COLOR_BOLD_WHITE "[MatrixClass-before_each]" COLOR_RESET "finished %s for %s matrix\n", name.c_str(), matrix->name.c_str());
+    if (MatrixClass<T>::is_debug_option_set(MatrixDebug::MATRIX_MISC))
+        printf(COLOR_BOLD_WHITE "[MatrixClass<T>-before_each]" COLOR_RESET "finished %s for %s matrix\n", name.c_str(), matrix->name.c_str());
 }
 
-MatrixClass *MatrixClass::convolution(MatrixClass *matrix)
-{
-    return NULL;
-}
-
-MatrixClass *MatrixClass::round(bool inplace)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::round(bool inplace)
 {
     before_each(this, "round");
 
-    MatrixClass *result = this->map(
+    MatrixClass<T> *result = this->map(
         MatrixType::NORMAL, [](size_t i, size_t j, float value) -> float
         { return std::round(value); },
         inplace);
@@ -67,7 +71,8 @@ MatrixClass *MatrixClass::round(bool inplace)
     return result;
 }
 
-const std::string &MatrixClass::get_name()
+template <typename T>
+const std::string &MatrixClass<T>::get_name()
 {
     before_each(this, "get_name");
 
@@ -77,18 +82,21 @@ const std::string &MatrixClass::get_name()
 }
 
 /*not set*/
-void MatrixClass::set_debug_options(MatrixDebug debug)
+template <typename T>
+void MatrixClass<T>::set_debug_options(MatrixDebug debug)
 {
-    MatrixClass::debug_options = debug;
+    MatrixClass<T>::debug_options = debug;
 }
 
 /*not set*/
-bool MatrixClass::is_debug_option_set(MatrixDebug debug_option)
+template <typename T>
+bool MatrixClass<T>::is_debug_option_set(MatrixDebug debug_option)
 {
-    return (MatrixClass::debug_options & debug_option) == debug_option;
+    return (MatrixClass<T>::debug_options & debug_option) == debug_option;
 }
 
-void MatrixClass::set(size_t i, size_t j, float element)
+template <typename T>
+void MatrixClass<T>::set(size_t i, size_t j, T element)
 {
     before_each(this, "set");
 
@@ -98,12 +106,13 @@ void MatrixClass::set(size_t i, size_t j, float element)
 }
 
 // not sure it works
-MatrixClass *MatrixClass::select_lines_array(size_t *array, size_t size)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::select_lines_array(size_t *array, size_t size)
 {
     // check that matrix isn't null check that lines in array are valid, cehck that size isn't bigger than the number of lines
     before_each(this, "select_lines_array");
 
-    MatrixClass *result = new MatrixClass(size, this->m);
+    MatrixClass<T> *result = new MatrixClass<T>(size, this->m);
 
     for (size_t i = 0; i < size; i++)
         for (size_t j = 0; j < this->m; j++)
@@ -115,12 +124,13 @@ MatrixClass *MatrixClass::select_lines_array(size_t *array, size_t size)
 }
 
 // not sure it works
-MatrixClass *MatrixClass::select_columns_array(size_t *array, size_t size)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::select_columns_array(size_t *array, size_t size)
 {
     // check that matrix isn't null check that lines in array are valid, cehck that size isn't bigger than the number of lines
     before_each(this, "select_columns_array");
 
-    MatrixClass *result = new MatrixClass(this->n, size);
+    MatrixClass<T> *result = new MatrixClass<T>(this->n, size);
 
     for (size_t i = 0; i < this->n; i++)
         for (size_t j = 0; j < size; j++)
@@ -131,14 +141,15 @@ MatrixClass *MatrixClass::select_columns_array(size_t *array, size_t size)
     return result;
 }
 
-MatrixClass *MatrixClass::select_array(size_t *lines, size_t n_lines, size_t *columns, size_t n_columns)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::select_array(size_t *lines, size_t n_lines, size_t *columns, size_t n_columns)
 {
     // do checks
 
     before_each(this, "select_array");
 
-    MatrixClass *temp;
-    MatrixClass *result = NULL;
+    MatrixClass<T> *temp;
+    MatrixClass<T> *result = NULL;
 
     temp = this->select_lines_array(lines, n_lines);
 
@@ -153,12 +164,13 @@ MatrixClass *MatrixClass::select_array(size_t *lines, size_t n_lines, size_t *co
 }
 
 /*not set*/
-std::pair<MatrixClass *, MatrixClass *> MatrixClass::lu_decomposition(MatrixClass *matrix)
+template <typename T>
+std::pair<MatrixClass<T> *, MatrixClass<T> *> MatrixClass<T>::lu_decomposition(MatrixClass<T> *matrix)
 {
     // check that matrix is square and compatible, det != 0
 
-    MatrixClass *u = matrix->copy()->set_name("upper");
-    MatrixClass *l = (new MatrixClass(matrix->n, matrix->m))->set_name("lower"); // make it's diagonal ones
+    MatrixClass<T> *u = matrix->copy()->set_name("upper");
+    MatrixClass<T> *l = (new MatrixClass<T>(matrix->n, matrix->m))->set_name("lower"); // make it's diagonal ones
 
     l->map(
         DIAGONAL, [](size_t i, size_t j, float element) -> float
@@ -187,15 +199,16 @@ std::pair<MatrixClass *, MatrixClass *> MatrixClass::lu_decomposition(MatrixClas
         }
     }
 
-    return std::pair<MatrixClass *, MatrixClass *>(l, u);
+    return std::pair<MatrixClass<T> *, MatrixClass<T> *>(l, u);
 }
 
 /*not set*/
 // should we remove the destructive option ?
-MatrixClass *MatrixClass::copy_matrix_in(MatrixClass *dest, MatrixClass *src, size_t startI, size_t startJ, bool destructive)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::copy_matrix_in(MatrixClass<T> *dest, MatrixClass<T> *src, size_t startI, size_t startJ, bool destructive)
 {
 
-    MatrixClass *result = destructive ? dest : dest->copy();
+    MatrixClass<T> *result = destructive ? dest : dest->copy();
 
     for (size_t i = startI; i < startI + src->n; i++)
         for (size_t j = startJ; j < startJ + src->m; j++)
@@ -204,12 +217,14 @@ MatrixClass *MatrixClass::copy_matrix_in(MatrixClass *dest, MatrixClass *src, si
     return result;
 }
 
-std::pair<std::size_t, std::size_t> MatrixClass::size()
+template <typename T>
+std::pair<std::size_t, std::size_t> MatrixClass<T>::size()
 {
     return std::pair<std::size_t, std::size_t>(this->n, this->m);
 }
 
-MatrixType MatrixClass::type()
+template <typename T>
+MatrixType MatrixClass<T>::type()
 {
     // we check if it's a diagonal matrix
     // we check if it's a lower triangular / upper triangular matrix
@@ -271,9 +286,10 @@ MatrixType MatrixClass::type()
 }
 
 /*not set*/
-MatrixClass *MatrixClass::replace_lines(MatrixClass *matrix_A, size_t Afrom, size_t Ato, MatrixClass *matrix_B, size_t Bfrom, size_t Bto)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::replace_lines(MatrixClass<T> *matrix_A, size_t Afrom, size_t Ato, MatrixClass<T> *matrix_B, size_t Bfrom, size_t Bto)
 {
-    MatrixClass *result;
+    MatrixClass<T> *result;
     size_t size = Ato - Afrom + 1;
 
     if (matrix_A->m != matrix_B->m)
@@ -297,9 +313,10 @@ MatrixClass *MatrixClass::replace_lines(MatrixClass *matrix_A, size_t Afrom, siz
     return result;
 }
 
-MatrixClass *MatrixClass::replace_columns(MatrixClass *matrix_A, size_t Afrom, size_t Ato, MatrixClass *matrix_B, size_t Bfrom, size_t Bto)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::replace_columns(MatrixClass<T> *matrix_A, size_t Afrom, size_t Ato, MatrixClass<T> *matrix_B, size_t Bfrom, size_t Bto)
 {
-    MatrixClass *result;
+    MatrixClass<T> *result;
     size_t size = Ato - Afrom + 1;
 
     if (matrix_A->n != matrix_B->n)
@@ -324,9 +341,10 @@ MatrixClass *MatrixClass::replace_columns(MatrixClass *matrix_A, size_t Afrom, s
 }
 
 /*not set*/
-MatrixClass *MatrixClass::replace_lines_with(MatrixClass *matrix_A, size_t Afrom, size_t Ato, float number)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::replace_lines_with(MatrixClass<T> *matrix_A, size_t Afrom, size_t Ato, T value)
 {
-    MatrixClass *result;
+    MatrixClass<T> *result;
 
     if ((Afrom > Ato) || (Afrom > matrix_A->n - 1 || Ato > matrix_A->n - 1))
     {
@@ -338,15 +356,16 @@ MatrixClass *MatrixClass::replace_lines_with(MatrixClass *matrix_A, size_t Afrom
 
     for (size_t i = Ato; i <= Afrom; i++)
         for (size_t j = 0; j < matrix_A->m; j++)
-            (*result)[i][j] = number;
+            (*result)[i][j] = value;
 
     return result;
 }
 
 /*not set*/
-MatrixClass *MatrixClass::replace_columns_with(MatrixClass *matrix_A, size_t Afrom, size_t Ato, float number)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::replace_columns_with(MatrixClass<T> *matrix_A, size_t Afrom, size_t Ato, T value)
 {
-    MatrixClass *result;
+    MatrixClass<T> *result;
 
     if ((Afrom > Ato) || (Afrom > matrix_A->m - 1 || Ato > matrix_A->m - 1))
     {
@@ -358,21 +377,22 @@ MatrixClass *MatrixClass::replace_columns_with(MatrixClass *matrix_A, size_t Afr
 
     for (size_t i = 0; i < matrix_A->n; i++)
         for (size_t j = Afrom; j <= Ato; j++)
-            (*result)[i][j] = number;
+            (*result)[i][j] = value;
 
     return result;
 }
 
-MatrixClass *MatrixClass::resize(size_t n, size_t m, bool inline_)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::resize(size_t n, size_t m, bool inline_)
 {
     before_each(this, "resize");
     // check that it's not negatif values
 
     if (inline_)
     {
-        MatrixClass *save = this->copy()->set_name("resize-save");
+        MatrixClass<T> *save = this->copy()->set_name("resize-save");
 
-        MatrixClass::desallocate(this);
+        MatrixClass<T>::desallocate(this);
 
         this->allocate_matrix(n, m);
 
@@ -391,7 +411,7 @@ MatrixClass *MatrixClass::resize(size_t n, size_t m, bool inline_)
     }
     else
     {
-        MatrixClass *result = new MatrixClass(n, m);
+        MatrixClass<T> *result = new MatrixClass<T>(n, m);
 
         for (size_t i = 0; i < std::min(this->n, n); i++)
             for (size_t j = 0; j < std::min(this->m, m); j++)
@@ -404,24 +424,26 @@ MatrixClass *MatrixClass::resize(size_t n, size_t m, bool inline_)
 }
 
 /*not set*/
-void MatrixClass::desallocate_matrices(size_t n_args, ...)
+template <typename T>
+void MatrixClass<T>::desallocate_matrices(size_t n_args, ...)
 {
     va_list ap;
-    MatrixClass *matrix;
+    MatrixClass<T> *matrix;
 
     va_start(ap, n_args);
 
     for (size_t i = 0; i < n_args; i++)
     {
-        matrix = va_arg(ap, MatrixClass *);
-        MatrixClass::desallocate(matrix);
+        matrix = va_arg(ap, MatrixClass<T> *);
+        MatrixClass<T>::desallocate(matrix);
     }
 
     va_end(ap);
 }
 
 /*not set*/
-void MatrixClass::desallocate(MatrixClass *matrix)
+template <typename T>
+void MatrixClass<T>::desallocate(MatrixClass<T> *matrix)
 {
     if (matrix->content == NULL)
         return;
@@ -438,17 +460,18 @@ void MatrixClass::desallocate(MatrixClass *matrix)
     matrix->m = 0;
     /*---*/
 
-    if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_DESALLOCATION))
-        printf(COLOR_RED "[MatrixClass-desallocate]:" COLOR_RESET "a matrix " COLOR_UNDERLINE "(%s)" COLOR_RESET " got desallocated\n", matrix->name.length() == 0 ? "/" : matrix->name.c_str());
+    if (MatrixClass<T>::is_debug_option_set(MatrixDebug::MATRIX_DESALLOCATION))
+        printf(COLOR_RED "[MatrixClass<T>-desallocate]:" COLOR_RESET "a matrix " COLOR_UNDERLINE "(%s)" COLOR_RESET " got desallocated\n", matrix->name.length() == 0 ? "/" : matrix->name.c_str());
 
-    MatrixClass::desallocated_matrices++;
+    MatrixClass<T>::desallocated_matrices++;
 
     // Todo: recheck this one
     // Not sure about this one
     // free(this);
 }
 
-MatrixClass *MatrixClass::set_name(const std::string &name)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::set_name(const std::string &name)
 {
     before_each(this, "set_name");
 
@@ -459,59 +482,67 @@ MatrixClass *MatrixClass::set_name(const std::string &name)
     return this;
 }
 
-MatrixClass::~MatrixClass()
+template <typename T>
+MatrixClass<T>::~MatrixClass<T>()
 {
-    before_each(this, "~MatrixClass()");
+    before_each(this, "~MatrixClass<T>()");
 
     /*
-        if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_DESTRUCTION))
-            printf(COLOR_RED "[~MatrixClass]:" COLOR_RESET "destroying a matrix " COLOR_UNDERLINE "(%s)" COLOR_RESET "\n", this->name.length() == 0 ? "/" : this->name.c_str());
+        if (MatrixClass<T>::is_debug_option_set(MatrixDebug::MATRIX_DESTRUCTION))
+            printf(COLOR_RED "[~MatrixClass<T>]:" COLOR_RESET "destroying a matrix " COLOR_UNDERLINE "(%s)" COLOR_RESET "\n", this->name.length() == 0 ? "/" : this->name.c_str());
     */
 
     /*
-    if (MatrixClass::is_debug_option_set(MatrixDebug::MISC))
-        printf(COLOR_YELLOW "[~MatrixClass]:" COLOR_RESET "%p %ld %ld(content, n, m)\n", this->content, this->n, this->m);
+    if (MatrixClass<T>::is_debug_option_set(MatrixDebug::MISC))
+        printf(COLOR_YELLOW "[~MatrixClass<T>]:" COLOR_RESET "%p %ld %ld(content, n, m)\n", this->content, this->n, this->m);
     */
 
     if (this->content == NULL)
     {
-        printf(COLOR_BOLD_RED "[~MatrixClass]:" COLOR_RESET "matrix " COLOR_UNDERLINE "(%s)" COLOR_RESET " already got destroyed\n", this->name.length() == 0 ? "/" : this->name.c_str());
+        printf(COLOR_BOLD_RED "[~MatrixClass<T>]:" COLOR_RESET "matrix " COLOR_UNDERLINE "(%s)" COLOR_RESET " already got destroyed\n", this->name.length() == 0 ? "/" : this->name.c_str());
         this->n = 0;
         this->m = 0;
         return;
     }
 
-    MatrixClass::desallocate(this);
+    MatrixClass<T>::desallocate(this);
 
     this->n = 0;
     this->m = 0;
     this->content = NULL;
 
-    if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_DESTRUCTION))
-        printf(COLOR_RED "[~MatrixClass]:" COLOR_RESET "a matrix " COLOR_UNDERLINE "(%s)" COLOR_RESET " got destroyed\n", this->name.length() == 0 ? "/" : this->name.length() == 0 ? "/"
-                                                                                                                                                                                    : this->name.c_str());
+    if (MatrixClass<T>::is_debug_option_set(MatrixDebug::MATRIX_DESTRUCTION))
+        printf(COLOR_RED "[~MatrixClass<T>]:" COLOR_RESET "a matrix " COLOR_UNDERLINE "(%s)" COLOR_RESET " got destroyed\n", this->name.length() == 0 ? "/" : this->name.length() == 0 ? "/"
+                                                                                                                                                                                       : this->name.c_str());
 
-    MatrixClass::destroyed_matrices++;
+    MatrixClass<T>::destroyed_matrices++;
 
-    if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_MISC))
-        printf(COLOR_YELLOW "[~MatrixClass-]:" COLOR_RESET "%ld, " COLOR_BOLD_WHITE "%ld" COLOR_RESET ", %ld, " COLOR_BOLD_WHITE "%ld" COLOR_RESET "(created, allocated, destroyed, desallocated)\n", MatrixClass::created_matrices, MatrixClass::allocated_matrices, MatrixClass::destroyed_matrices, MatrixClass::desallocated_matrices);
+    if (MatrixClass<T>::is_debug_option_set(MatrixDebug::MATRIX_MISC))
+        printf(COLOR_YELLOW "[~MatrixClass<T>-]:" COLOR_RESET "%ld, " COLOR_BOLD_WHITE "%ld" COLOR_RESET ", %ld, " COLOR_BOLD_WHITE "%ld" COLOR_RESET "(created, allocated, destroyed, desallocated)\n", MatrixClass<T>::created_matrices, MatrixClass<T>::allocated_matrices, MatrixClass<T>::destroyed_matrices, MatrixClass<T>::desallocated_matrices);
 
-    after_each(this, "~MatrixClass()");
+    after_each(this, "~MatrixClass<T>()");
 }
 
 // make the print check the max in the column and not in the entire matrix
-void MatrixClass::print(size_t precision, bool sign)
+template <typename T>
+void MatrixClass<T>::print(size_t precision, bool sign)
 {
     before_each(this, "print");
 
+    /*
     size_t size;
     std::pair<size_t, size_t> max;
+    */
 
     if (this->name.length() > 0)
         std::cout << this->name << ":" << std::endl;
 
+    /*
     max = this->max(NORMAL);
     size = count_digits(this->get(max.first, max.second));
+    */
+
+    T test;
 
     printf("[\n");
     for (size_t i = 0; i < this->n; i++)
@@ -519,7 +550,9 @@ void MatrixClass::print(size_t precision, bool sign)
         printf("   [");
         for (size_t j = 0; j < this->m; j++)
         {
-            print_float(this->get(i, j), size, precision, ' ', sign);
+            // print_float(this->get(i, j), size, precision, ' ', sign);
+            this->get(i, j, test).print();
+            // std::cout << this->get(i, j, test);
             printf("%s", j == this->m - 1 ? "\0" : ", ");
         }
         printf("]\n");
@@ -529,7 +562,8 @@ void MatrixClass::print(size_t precision, bool sign)
     after_each(this, "print");
 }
 
-void MatrixClass::print_line(size_t line, size_t precision, bool sign)
+template <typename T>
+void MatrixClass<T>::print_line(size_t line, size_t precision, bool sign)
 {
     before_each(this, "print_line");
 
@@ -557,7 +591,8 @@ void MatrixClass::print_line(size_t line, size_t precision, bool sign)
     after_each(this, "print_line");
 }
 
-void MatrixClass::print_col(size_t column, size_t precision, bool sign)
+template <typename T>
+void MatrixClass<T>::print_col(size_t column, size_t precision, bool sign)
 {
     before_each(this, "print_col");
 
@@ -586,15 +621,16 @@ void MatrixClass::print_col(size_t column, size_t precision, bool sign)
 
 /*not set*/
 // ca serai pas plus inteligent d'afficher colonne par colonne ?
-void MatrixClass::print_matrices_concatenation(size_t n_args, ...)
+template <typename T>
+void MatrixClass<T>::print_matrices_concatenation(size_t n_args, ...)
 {
     int lines;
     va_list ap;
-    MatrixClass *matrix;
+    MatrixClass<T> *matrix;
 
     va_start(ap, n_args);
 
-    matrix = va_arg(ap, MatrixClass *);
+    matrix = va_arg(ap, MatrixClass<T> *);
     lines = matrix->n;
 
     for (int i = 1; i < n_args; i++)
@@ -606,7 +642,7 @@ void MatrixClass::print_matrices_concatenation(size_t n_args, ...)
         }
         if (matrix->n > lines)
             lines = matrix->n;
-        matrix = va_arg(ap, MatrixClass *); // mets la en premiere ligne si jamais probleme
+        matrix = va_arg(ap, MatrixClass<T> *); // mets la en premiere ligne si jamais probleme
     }
     va_end(ap);
 
@@ -615,7 +651,7 @@ void MatrixClass::print_matrices_concatenation(size_t n_args, ...)
         va_start(ap, n_args);
         for (size_t j = 0; j < n_args; j++)
         {
-            matrix = va_arg(ap, MatrixClass *);
+            matrix = va_arg(ap, MatrixClass<T> *);
 
             if (i < matrix->n)
                 matrix->print_line(i, 2, true);
@@ -630,7 +666,8 @@ void MatrixClass::print_matrices_concatenation(size_t n_args, ...)
 }
 
 /*not set*/
-std::ostream &operator<<(std::ostream &os, MatrixClass &matrix)
+template <typename T>
+std::ostream &operator<<(std::ostream &os, MatrixClass<T> &matrix)
 {
 
     matrix.print();
@@ -638,20 +675,21 @@ std::ostream &operator<<(std::ostream &os, MatrixClass &matrix)
     return os;
 }
 
-float MatrixClass::get(size_t i, size_t j, float default_return_value)
+template <typename T>
+T MatrixClass<T>::get(size_t i, size_t j, T default_return_value)
 {
     before_each(this, "get");
 
     if (i > this->n - 1)
     {
-        if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_MISC))
+        if (MatrixClass<T>::is_debug_option_set(MatrixDebug::MATRIX_MISC))
             printf(COLOR_BOLD_WHITE "[get]:" COLOR_RESET "invalid i provided\n");
         return default_return_value;
     }
 
     if (j > this->m - 1)
     {
-        if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_MISC))
+        if (MatrixClass<T>::is_debug_option_set(MatrixDebug::MATRIX_MISC))
             printf(COLOR_BOLD_WHITE "[get]:" COLOR_RESET "invalid i provided\n");
         return default_return_value;
     }
@@ -664,9 +702,10 @@ float MatrixClass::get(size_t i, size_t j, float default_return_value)
 }
 
 /*not set*/
-MatrixClass *MatrixClass::divide_matrix_matrix(MatrixClass *matrix_A, MatrixClass *matrix_B)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::divide_matrix_matrix(MatrixClass<T> *matrix_A, MatrixClass<T> *matrix_B)
 {
-    MatrixClass *result;
+    MatrixClass<T> *result;
 
     if (matrix_A->size() != matrix_B->size())
     {
@@ -674,7 +713,7 @@ MatrixClass *MatrixClass::divide_matrix_matrix(MatrixClass *matrix_A, MatrixClas
         return NULL;
     }
 
-    result = new MatrixClass(matrix_A->n, matrix_A->m);
+    result = new MatrixClass<T>(matrix_A->n, matrix_A->m);
 
     result->map(
         MatrixType::NORMAL, [&matrix_A, &matrix_B](size_t i, size_t j, float element) -> float
@@ -685,9 +724,10 @@ MatrixClass *MatrixClass::divide_matrix_matrix(MatrixClass *matrix_A, MatrixClas
 }
 
 /*not set*/
-MatrixClass *MatrixClass::multiply_matrix_matrix(MatrixClass *matrix_A, MatrixClass *matrix_B)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::multiply_matrix_matrix(MatrixClass<T> *matrix_A, MatrixClass<T> *matrix_B)
 {
-    MatrixClass *result;
+    MatrixClass<T> *result;
 
     if (matrix_A->size() != matrix_B->size())
     {
@@ -695,7 +735,7 @@ MatrixClass *MatrixClass::multiply_matrix_matrix(MatrixClass *matrix_A, MatrixCl
         return NULL;
     }
 
-    result = new MatrixClass(matrix_A->n, matrix_A->m);
+    result = new MatrixClass<T>(matrix_A->n, matrix_A->m);
 
     result->map(
         MatrixType::NORMAL, [&matrix_A, &matrix_B](size_t i, size_t j, float element) -> float
@@ -705,88 +745,96 @@ MatrixClass *MatrixClass::multiply_matrix_matrix(MatrixClass *matrix_A, MatrixCl
     return result;
 }
 
-MatrixClass *MatrixClass::operator+(MatrixClass *matrix)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::operator+(MatrixClass<T> *matrix)
 {
     before_each(this, "operator");
 
-    MatrixClass *result = MatrixClass::add_matrix_matrix(this, matrix);
+    MatrixClass<T> *result = MatrixClass<T>::add_matrix_matrix(this, matrix);
 
     after_each(this, "operator+");
 
     return result;
 }
 
-MatrixClass *MatrixClass::operator-(MatrixClass *matrix)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::operator-(MatrixClass<T> *matrix)
 {
     before_each(this, "operator");
 
-    MatrixClass *result = MatrixClass::subtract_matrix_matrix(this, matrix);
+    MatrixClass<T> *result = MatrixClass<T>::subtract_matrix_matrix(this, matrix);
 
     after_each(this, "operator");
 
     return result;
 }
 
-MatrixClass *MatrixClass::operator*(MatrixClass *matrix)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::operator*(MatrixClass<T> *matrix)
 {
     before_each(this, "operator");
 
-    MatrixClass *result = MatrixClass::multiply_matrix_matrix(this, matrix);
+    MatrixClass<T> *result = MatrixClass<T>::multiply_matrix_matrix(this, matrix);
 
     after_each(this, "operator");
 
     return result;
 }
 
-MatrixClass *MatrixClass::operator/(MatrixClass *matrix)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::operator/(MatrixClass<T> *matrix)
 {
     before_each(this, "operator");
 
-    MatrixClass *result = MatrixClass::divide_matrix_matrix(this, matrix);
+    MatrixClass<T> *result = MatrixClass<T>::divide_matrix_matrix(this, matrix);
 
     after_each(this, "operator");
 
     return result;
 }
 
-MatrixClass *MatrixClass::operator+(float number)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::operator+(T number)
 {
     before_each(this, "operator");
 
-    MatrixClass *result = MatrixClass::add_matrix_float(this, number);
+    MatrixClass<T> *result = MatrixClass<T>::add_matrix_value(this, number);
 
     after_each(this, "operator");
 
     return result;
 }
 
-MatrixClass *MatrixClass::operator-(float number)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::operator-(T number)
 {
     before_each(this, "operator");
 
-    MatrixClass *result = MatrixClass::substract_matrix_float(this, number);
+    MatrixClass<T> *result = MatrixClass<T>::substract_matrix_value(this, number);
 
     after_each(this, "operator");
 
     return result;
 }
 
-MatrixClass *MatrixClass::operator*(float number)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::operator*(T number)
 {
     before_each(this, "operator");
 
-    MatrixClass *result = MatrixClass::multiply_matrix_float(this, number);
+    MatrixClass<T> *result = MatrixClass<T>::multiply_matrix_value(this, number);
 
     after_each(this, "operator");
 
     return result;
 }
 
-MatrixClass *MatrixClass::operator/(float number)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::operator/(T number)
 {
     before_each(this, "operator");
 
-    MatrixClass *result = MatrixClass::divide_matrix_float(this, number);
+    MatrixClass<T> *result = MatrixClass<T>::divide_matrix_value(this, number);
 
     after_each(this, "operator");
 
@@ -794,46 +842,49 @@ MatrixClass *MatrixClass::operator/(float number)
 }
 
 /*
-MatrixClass &MatrixClass::operator+=(float number)
+MatrixClass<T> &MatrixClass<T>::operator+=(float number)
 {
 }
 
-MatrixClass &MatrixClass::operator/=(float number)
+MatrixClass<T> &MatrixClass<T>::operator/=(float number)
 {
 }
 
-MatrixClass &MatrixClass::operator*=(float number)
+MatrixClass<T> &MatrixClass<T>::operator*=(float number)
 {
 }
 
-MatrixClass &MatrixClass::operator-=(float number)
+MatrixClass<T> &MatrixClass<T>::operator-=(float number)
 {
 }
 */
 
-MatrixClass *MatrixClass::operator++()
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::operator++()
 {
     before_each(this, "operator");
 
-    auto result = MatrixClass::add_matrix_float(this, 1);
+    auto result = MatrixClass<T>::add_matrix_float(this, 1);
 
     after_each(this, "operator");
 
     return result;
 }
 
-MatrixClass *MatrixClass::operator--()
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::operator--()
 {
     before_each(this, "operator");
 
-    auto result = MatrixClass::substract_matrix_float(this, 1);
+    auto result = MatrixClass<T>::substract_matrix_float(this, 1);
 
     after_each(this, "operator");
 
     return result;
 }
 
-float *MatrixClass::operator[](size_t i)
+template <typename T>
+T *MatrixClass<T>::operator[](size_t i)
 {
     before_each(this, "operator");
 
@@ -844,7 +895,8 @@ float *MatrixClass::operator[](size_t i)
     return result;
 }
 
-std::pair<size_t, size_t> MatrixClass::max(MatrixType type, bool absolute)
+template <typename T>
+std::pair<size_t, size_t> MatrixClass<T>::max(MatrixType type, bool absolute)
 {
     before_each(this, "max");
 
@@ -869,7 +921,8 @@ std::pair<size_t, size_t> MatrixClass::max(MatrixType type, bool absolute)
     return max;
 }
 
-size_t MatrixClass::max_line(size_t line, bool abs)
+template <typename T>
+size_t MatrixClass<T>::max_line(size_t line, bool abs)
 {
     before_each(this, "max_line");
 
@@ -885,7 +938,8 @@ size_t MatrixClass::max_line(size_t line, bool abs)
     return mJ;
 }
 
-size_t MatrixClass::max_column(size_t column, bool absolute)
+template <typename T>
+size_t MatrixClass<T>::max_column(size_t column, bool absolute)
 {
     before_each(this, "max_column");
 
@@ -907,7 +961,8 @@ size_t MatrixClass::max_column(size_t column, bool absolute)
     return mI;
 }
 
-std::pair<size_t, size_t> MatrixClass::min(MatrixType type, size_t *maxI, size_t *maxJ, bool absolute)
+template <typename T>
+std::pair<size_t, size_t> MatrixClass<T>::min(MatrixType type, size_t *maxI, size_t *maxJ, bool absolute)
 {
     before_each(this, "min");
 
@@ -932,7 +987,8 @@ std::pair<size_t, size_t> MatrixClass::min(MatrixType type, size_t *maxI, size_t
     return max;
 }
 
-size_t MatrixClass::min_line(size_t line, bool absolute)
+template <typename T>
+size_t MatrixClass<T>::min_line(size_t line, bool absolute)
 {
     before_each(this, "min_line");
 
@@ -954,7 +1010,8 @@ size_t MatrixClass::min_line(size_t line, bool absolute)
     return mJ;
 }
 
-size_t MatrixClass::min_column(size_t column, bool absolute)
+template <typename T>
+size_t MatrixClass<T>::min_column(size_t column, bool absolute)
 {
     before_each(this, "min_column");
 
@@ -976,11 +1033,12 @@ size_t MatrixClass::min_column(size_t column, bool absolute)
     return mI;
 }
 
-MatrixClass *MatrixClass::dot(MatrixClass *matrix)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::dot(MatrixClass<T> *matrix)
 {
     before_each(this, "dot");
 
-    auto result = MatrixClass::matrix_multiplication(this, matrix);
+    auto result = MatrixClass<T>::matrix_multiplication(this, matrix);
 
     after_each(this, "dot");
 
@@ -988,9 +1046,10 @@ MatrixClass *MatrixClass::dot(MatrixClass *matrix)
 }
 
 /*not set*/
-MatrixClass *MatrixClass::matrix_multiplication(MatrixClass *matrix_A, MatrixClass *matrix_B)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::matrix_multiplication(MatrixClass<T> *matrix_A, MatrixClass<T> *matrix_B)
 {
-    MatrixClass *result;
+    MatrixClass<T> *result;
 
     if (matrix_A->m != matrix_B->n)
     {
@@ -998,7 +1057,7 @@ MatrixClass *MatrixClass::matrix_multiplication(MatrixClass *matrix_A, MatrixCla
         return NULL;
     }
 
-    result = new MatrixClass(matrix_A->n, matrix_B->m);
+    result = new MatrixClass<T>(matrix_A->n, matrix_B->m);
 
     for (size_t i = 0; i < matrix_A->n; i++)
         for (size_t j = 0; j < matrix_B->m; j++)
@@ -1008,9 +1067,10 @@ MatrixClass *MatrixClass::matrix_multiplication(MatrixClass *matrix_A, MatrixCla
 }
 
 /*not set*/
-float MatrixClass::multiply_matrix_line_matrix_column(MatrixClass *matrix_A, MatrixClass *matrix_B, size_t LINE, size_t COLUMN)
+template <typename T>
+T MatrixClass<T>::multiply_matrix_line_matrix_column(MatrixClass<T> *matrix_A, MatrixClass<T> *matrix_B, size_t LINE, size_t COLUMN)
 {
-    float result = 0;
+    T result = 0;
 
     if (LINE > matrix_A->n - 1 || COLUMN > matrix_B->m - 1)
     {
@@ -1027,11 +1087,12 @@ float MatrixClass::multiply_matrix_line_matrix_column(MatrixClass *matrix_A, Mat
 /*optimiser la fonction pour selectionner la ligne avec le plus de zero !*/
 /*faire une fonction qui trouve la ligne ou il y ale plus de zero*/
 /*faire une fonction qui trouve la cologne ou il y a le plus de zero*/
-float MatrixClass::determinent()
+template <typename T>
+T MatrixClass<T>::determinent()
 {
     before_each(this, "determinent");
 
-    float result = 0;
+    T result = 0;
 
     if (!this->is_square())
     {
@@ -1047,7 +1108,7 @@ float MatrixClass::determinent()
 
     for (size_t i = 0; i < this->n; i++)
     {
-        MatrixClass *cofact = this->cofactor_of(0, i)->set_name("cofactor-matrix");
+        MatrixClass<T> *cofact = this->cofactor_of(0, i)->set_name("cofactor-matrix");
         /*0 in 0 + i in power fonction is for the j (i) but since we selected the first line*/
         /*should we let the "+1" or no ? or replace it with a "+1" ? and why exactly "+2" ? why it wouldn't work normaly ?*/
         result += std::pow(-1, 0 + i + 2) * (*this)[0][i] * cofact->determinent();
@@ -1063,11 +1124,12 @@ float MatrixClass::determinent()
     return result;
 }
 
-float MatrixClass::trace()
+template <typename T>
+T MatrixClass<T>::trace()
 {
     before_each(this, "trace");
 
-    float result = 0;
+    T result = 0;
 
     if (this->is_square())
     {
@@ -1083,7 +1145,8 @@ float MatrixClass::trace()
     return result;
 }
 
-MatrixClass *MatrixClass::select_lines(size_t start, size_t end)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::select_lines(size_t start, size_t end)
 {
     before_each(this, "select_lines");
 
@@ -1100,7 +1163,7 @@ MatrixClass *MatrixClass::select_lines(size_t start, size_t end)
     }
 
     size_t lines = end - start + 1;
-    MatrixClass *result = new MatrixClass(lines, this->m);
+    MatrixClass<T> *result = new MatrixClass<T>(lines, this->m);
 
     for (size_t i = start; i <= end; i++)
         for (size_t j = 0; j < this->m; j++)
@@ -1111,7 +1174,8 @@ MatrixClass *MatrixClass::select_lines(size_t start, size_t end)
     return result;
 }
 
-MatrixClass *MatrixClass::select_columns(size_t start, size_t end)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::select_columns(size_t start, size_t end)
 {
     // check that start < end
     before_each(this, "select_columns");
@@ -1129,7 +1193,7 @@ MatrixClass *MatrixClass::select_columns(size_t start, size_t end)
     }
 
     size_t columns = end - start + 1;
-    MatrixClass *result = new MatrixClass(this->n, columns);
+    MatrixClass<T> *result = new MatrixClass<T>(this->n, columns);
 
     for (size_t i = 0; i < this->n; i++)
         for (size_t j = start; j <= end; j++)
@@ -1140,12 +1204,13 @@ MatrixClass *MatrixClass::select_columns(size_t start, size_t end)
     return result;
 }
 
-MatrixClass *MatrixClass::select_(size_t startLine, size_t endLine, size_t startColumn, size_t endColumn)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::select_(size_t startLine, size_t endLine, size_t startColumn, size_t endColumn)
 {
     before_each(this, "select_");
 
-    MatrixClass *temp;
-    MatrixClass *result;
+    MatrixClass<T> *temp;
+    MatrixClass<T> *result;
 
     temp = this->select_lines(startLine, endLine);
 
@@ -1161,7 +1226,8 @@ MatrixClass *MatrixClass::select_(size_t startLine, size_t endLine, size_t start
     return result;
 }
 
-MatrixClass *MatrixClass::delete_lines(size_t start, size_t end)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::delete_lines(size_t start, size_t end)
 {
     before_each(this, "delete_lines");
 
@@ -1172,7 +1238,7 @@ MatrixClass *MatrixClass::delete_lines(size_t start, size_t end)
     }
 
     size_t lines = this->n - (end - start + 1);
-    MatrixClass *result = new MatrixClass(lines, this->m);
+    MatrixClass<T> *result = new MatrixClass<T>(lines, this->m);
 
     for (size_t i = 0; i < start; i++)
         for (size_t j = 0; j < this->m; j++)
@@ -1187,7 +1253,8 @@ MatrixClass *MatrixClass::delete_lines(size_t start, size_t end)
     return result;
 }
 
-MatrixClass *MatrixClass::delete_columns(size_t start, size_t end)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::delete_columns(size_t start, size_t end)
 {
 
     before_each(this, "delete_columns");
@@ -1199,7 +1266,7 @@ MatrixClass *MatrixClass::delete_columns(size_t start, size_t end)
     }
 
     size_t columns = this->m - (end - start + 1);
-    MatrixClass *result = new MatrixClass(this->n, columns);
+    MatrixClass<T> *result = new MatrixClass<T>(this->n, columns);
 
     for (size_t i = 0; i < this->n; i++)
     {
@@ -1215,12 +1282,13 @@ MatrixClass *MatrixClass::delete_columns(size_t start, size_t end)
     return result;
 }
 
-MatrixClass *MatrixClass::crop(size_t startLine, size_t endLine, size_t startColumn, size_t endColumn)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::crop(size_t startLine, size_t endLine, size_t startColumn, size_t endColumn)
 {
     before_each(this, "crop");
 
-    MatrixClass *temp;
-    MatrixClass *result;
+    MatrixClass<T> *temp;
+    MatrixClass<T> *result;
 
     temp = this->delete_lines(startLine, endLine);
 
@@ -1239,7 +1307,8 @@ MatrixClass *MatrixClass::crop(size_t startLine, size_t endLine, size_t startCol
     return result;
 }
 
-bool MatrixClass::is_diagonal()
+template <typename T>
+bool MatrixClass<T>::is_diagonal()
 {
     before_each(this, "is_diagonal");
 
@@ -1260,7 +1329,8 @@ bool MatrixClass::is_diagonal()
     return true;
 }
 
-bool MatrixClass::is_triangular()
+template <typename T>
+bool MatrixClass<T>::is_triangular()
 {
     before_each(this, "is_triangular");
 
@@ -1272,7 +1342,8 @@ bool MatrixClass::is_triangular()
     return this->is_lower_triangular() || this->is_upper_triangular();
 }
 
-bool MatrixClass::is_lower_triangular()
+template <typename T>
+bool MatrixClass<T>::is_lower_triangular()
 {
     before_each(this, "is_lower_triangular");
 
@@ -1289,7 +1360,8 @@ bool MatrixClass::is_lower_triangular()
     return true;
 }
 
-bool MatrixClass::is_upper_triangular()
+template <typename T>
+bool MatrixClass<T>::is_upper_triangular()
 {
     before_each(this, "is_upper_triangular");
 
@@ -1306,7 +1378,8 @@ bool MatrixClass::is_upper_triangular()
     return true;
 }
 
-bool MatrixClass::is_null()
+template <typename T>
+bool MatrixClass<T>::is_null()
 {
     before_each(this, "is_null");
 
@@ -1315,7 +1388,8 @@ bool MatrixClass::is_null()
     return this->content == NULL;
 }
 
-bool MatrixClass::is_square()
+template <typename T>
+bool MatrixClass<T>::is_square()
 {
     before_each(this, "is_square");
 
@@ -1325,7 +1399,8 @@ bool MatrixClass::is_square()
     return this->n == this->m;
 }
 
-void MatrixClass::read(MatrixType type)
+template <typename T>
+void MatrixClass<T>::read(MatrixType type)
 {
     before_each(this, "read");
 
@@ -1348,14 +1423,15 @@ void MatrixClass::read(MatrixType type)
 }
 
 /*not set*/
-MatrixClass *MatrixClass::concatenate_vertical(size_t n_args, ...)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::concatenate_vertical(size_t n_args, ...)
 {
 
     // if one of the params is NULL, or invalid we destroy the allocated matrice + print an error
     va_list ap;
-    MatrixClass *matrix;
-    MatrixClass *result;
-    MatrixClass **matrices = (MatrixClass **)calloc(n_args, sizeof(MatrixClass *));
+    MatrixClass<T> *matrix;
+    MatrixClass<T> *result;
+    MatrixClass<T> **matrices = (MatrixClass<T> **)calloc(n_args, sizeof(MatrixClass<T> *));
 
     int lines = 0;
     int columns = 0;
@@ -1365,7 +1441,7 @@ MatrixClass *MatrixClass::concatenate_vertical(size_t n_args, ...)
 
     for (int i = 0; i < n_args; i++)
     {
-        matrix = va_arg(ap, MatrixClass *);
+        matrix = va_arg(ap, MatrixClass<T> *);
         matrices[i] = matrix;
         if (matrices[i]->n > lines)
             lines = matrices[i]->n;
@@ -1373,7 +1449,7 @@ MatrixClass *MatrixClass::concatenate_vertical(size_t n_args, ...)
     }
     va_end(ap);
 
-    result = new MatrixClass(lines, columns);
+    result = new MatrixClass<T>(lines, columns);
 
     for (size_t k = 0; k < n_args; k++)
     {
@@ -1391,14 +1467,15 @@ MatrixClass *MatrixClass::concatenate_vertical(size_t n_args, ...)
 }
 
 /*not set*/
-MatrixClass *MatrixClass::concatenate_horizontal(size_t n_args, ...)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::concatenate_horizontal(size_t n_args, ...)
 {
     // if one of the params is NULL, or invalid we destroy the allocated matrice + print an error
 
     va_list ap;
-    MatrixClass *matrix;
-    MatrixClass *result;
-    MatrixClass **matrices = (MatrixClass **)calloc(n_args, sizeof(MatrixClass *));
+    MatrixClass<T> *matrix;
+    MatrixClass<T> *result;
+    MatrixClass<T> **matrices = (MatrixClass<T> **)calloc(n_args, sizeof(MatrixClass<T> *));
 
     int lines = 0;
     int columns = 0;
@@ -1408,7 +1485,7 @@ MatrixClass *MatrixClass::concatenate_horizontal(size_t n_args, ...)
 
     for (int i = 0; i < n_args; i++)
     {
-        matrix = va_arg(ap, MatrixClass *);
+        matrix = va_arg(ap, MatrixClass<T> *);
         matrices[i] = matrix;
         if (matrices[i]->n > columns)
             columns = matrices[i]->m;
@@ -1416,7 +1493,7 @@ MatrixClass *MatrixClass::concatenate_horizontal(size_t n_args, ...)
     }
     va_end(ap);
 
-    result = new MatrixClass(lines, columns);
+    result = new MatrixClass<T>(lines, columns);
 
     for (size_t k = 0; k < n_args; k++)
     {
@@ -1433,13 +1510,14 @@ MatrixClass *MatrixClass::concatenate_horizontal(size_t n_args, ...)
     return result;
 }
 
-bool MatrixClass::one(MatrixType type, BooleanProducer boolean_producer)
+template <typename T>
+bool MatrixClass<T>::one(MatrixType type, BooleanProducer<T> boolean_producer)
 {
     before_each(this, "one");
 
     bool result = false;
 
-    this->for_each(type, [&boolean_producer, &result](size_t i, size_t j, float element) -> void
+    this->for_each(type, [&boolean_producer, &result](size_t i, size_t j, T element) -> void
                    {
         if (boolean_producer(i, j, element))
             result = true; });
@@ -1449,13 +1527,14 @@ bool MatrixClass::one(MatrixType type, BooleanProducer boolean_producer)
     return result;
 }
 
-float MatrixClass::reduce(MatrixType type, Reducer reducer, float initialValue)
+template <typename T>
+T MatrixClass<T>::reduce(MatrixType type, Reducer<T> reducer, T initialValue)
 {
     before_each(this, "reduce");
 
-    float result = initialValue;
+    T result = initialValue;
 
-    this->for_each(type, [&reducer, &result](size_t i, size_t j, float value) -> void
+    this->for_each(type, [&reducer, &result](size_t i, size_t j, T value) -> void
                    { result = reducer(result, i, j, value); });
 
     after_each(this, "reduce");
@@ -1463,13 +1542,14 @@ float MatrixClass::reduce(MatrixType type, Reducer reducer, float initialValue)
     return result;
 }
 
-float MatrixClass::reduce_line(size_t line, Reducer reducer, float initialValue)
+template <typename T>
+T MatrixClass<T>::reduce_line(size_t line, Reducer<T> reducer, T initialValue)
 {
     before_each(this, "reduce_line");
 
-    float result = initialValue;
+    T result = initialValue;
 
-    this->for_each_line(line, [&reducer, &result](size_t i, size_t j, float value) -> void
+    this->for_each_line(line, [&reducer, &result](size_t i, size_t j, T value) -> void
                         { result += reducer(result, i, j, value); });
 
     after_each(this, "reduce_line");
@@ -1477,13 +1557,14 @@ float MatrixClass::reduce_line(size_t line, Reducer reducer, float initialValue)
     return result;
 }
 
-float MatrixClass::reduce_column(size_t column, Reducer reducer, float initialValue)
+template <typename T>
+T MatrixClass<T>::reduce_column(size_t column, Reducer<T> reducer, T initialValue)
 {
     before_each(this, "reduce_column");
 
-    float result = initialValue;
+    T result = initialValue;
 
-    this->for_each_column(column, [&reducer, &result](size_t i, size_t j, float value) -> void
+    this->for_each_column(column, [&reducer, &result](size_t i, size_t j, T value) -> void
                           { result += reducer(result, i, j, value); });
 
     after_each(this, "reduce_column");
@@ -1491,7 +1572,8 @@ float MatrixClass::reduce_column(size_t column, Reducer reducer, float initialVa
     return result;
 }
 
-bool MatrixClass::line_one(size_t line, BooleanProducer boolean_producer)
+template <typename T>
+bool MatrixClass<T>::line_one(size_t line, BooleanProducer<T> boolean_producer)
 {
     before_each(this, "line_one");
 
@@ -1504,7 +1586,8 @@ bool MatrixClass::line_one(size_t line, BooleanProducer boolean_producer)
     return false;
 }
 
-bool MatrixClass::column_one(size_t column, BooleanProducer boolean_producer)
+template <typename T>
+bool MatrixClass<T>::column_one(size_t column, BooleanProducer<T> boolean_producer)
 {
     before_each(this, "column_one");
 
@@ -1517,7 +1600,8 @@ bool MatrixClass::column_one(size_t column, BooleanProducer boolean_producer)
     return false;
 }
 
-bool MatrixClass::all(MatrixType type, BooleanProducer boolean_producer)
+template <typename T>
+bool MatrixClass<T>::all(MatrixType type, BooleanProducer<T> boolean_producer)
 {
     before_each(this, "all");
 
@@ -1533,7 +1617,8 @@ bool MatrixClass::all(MatrixType type, BooleanProducer boolean_producer)
     return result;
 }
 
-bool MatrixClass::line_all(size_t line, BooleanProducer boolean_producer)
+template <typename T>
+bool MatrixClass<T>::line_all(size_t line, BooleanProducer<T> boolean_producer)
 {
     before_each(this, "line_all");
 
@@ -1546,7 +1631,8 @@ bool MatrixClass::line_all(size_t line, BooleanProducer boolean_producer)
     return true;
 }
 
-bool MatrixClass::column_all(size_t column, BooleanProducer boolean_producer)
+template <typename T>
+bool MatrixClass<T>::column_all(size_t column, BooleanProducer<T> boolean_producer)
 {
     before_each(this, "column_all");
 
@@ -1559,14 +1645,15 @@ bool MatrixClass::column_all(size_t column, BooleanProducer boolean_producer)
     return true;
 }
 
-MatrixClass *MatrixClass::inverse(bool destructive)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::inverse(bool destructive)
 {
     before_each(this, "inverse");
 
     float det;
-    MatrixClass *result;
-    MatrixClass *cofactor_matrix;
-    MatrixClass *transpose_cofactor_matrix;
+    MatrixClass<T> *result;
+    MatrixClass<T> *cofactor_matrix;
+    MatrixClass<T> *transpose_cofactor_matrix;
 
     det = this->determinent();
 
@@ -1580,7 +1667,7 @@ MatrixClass *MatrixClass::inverse(bool destructive)
 
     transpose_cofactor_matrix = cofactor_matrix->transpose();
 
-    result = MatrixClass::multiply_matrix_float(transpose_cofactor_matrix, (1 / det));
+    result = MatrixClass<T>::multiply_matrix_float(transpose_cofactor_matrix, (1 / det));
 
     delete cofactor_matrix;
     delete transpose_cofactor_matrix;
@@ -1590,15 +1677,16 @@ MatrixClass *MatrixClass::inverse(bool destructive)
     return result;
 }
 
-MatrixClass *MatrixClass::transpose(bool destructive)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::transpose(bool destructive)
 {
     before_each(this, "transpose");
 
     if (destructive)
     {
-        MatrixClass *save = this->copy();
+        MatrixClass<T> *save = this->copy();
 
-        MatrixClass::desallocate(this);
+        MatrixClass<T>::desallocate(this);
 
         this->n = save->m;
         this->m = save->n;
@@ -1617,7 +1705,7 @@ MatrixClass *MatrixClass::transpose(bool destructive)
     }
     else
     {
-        MatrixClass *result = new MatrixClass(this->m, this->n);
+        MatrixClass<T> *result = new MatrixClass<T>(this->m, this->n);
 
         for (size_t i = 0; i < this->n; i++)
             for (size_t j = 0; j < this->m; j++)
@@ -1629,19 +1717,20 @@ MatrixClass *MatrixClass::transpose(bool destructive)
     }
 }
 
-MatrixClass *MatrixClass::cofactor()
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::cofactor()
 {
     // TODO: check that matrix is a square matrix
 
     before_each(this, "cofactor");
 
-    MatrixClass *result = new MatrixClass(this->n, this->m);
+    MatrixClass<T> *result = new MatrixClass<T>(this->n, this->m);
 
     for (size_t i = 0; i < this->n; i++)
     {
         for (size_t j = 0; j < this->n; j++)
         {
-            MatrixClass *cofact = this->cofactor_of(i, j);
+            MatrixClass<T> *cofact = this->cofactor_of(i, j);
             float det_cofact = cofact->determinent();
             /*(*result)[i][j] = power(-1, i + 1 + j + 1) * det_cofact;*/
             (*result)[i][j] = std::pow(-1, i + 1 + j + 1) * det_cofact;
@@ -1654,13 +1743,14 @@ MatrixClass *MatrixClass::cofactor()
     return result;
 }
 
-MatrixClass *MatrixClass::cofactor_of(size_t line, size_t column)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::cofactor_of(size_t line, size_t column)
 {
     before_each(this, "cofactor_of");
 
     int k = 0;
     float *array;
-    MatrixClass *result;
+    MatrixClass<T> *result;
 
     // TODO: check that these are valid lines and columns
 
@@ -1678,7 +1768,7 @@ MatrixClass *MatrixClass::cofactor_of(size_t line, size_t column)
         }
     }
 
-    result = MatrixClass::matrix_from_array(NORMAL, array, this->n - 1, this->m - 1);
+    result = MatrixClass<T>::matrix_from_array(NORMAL, array, this->n - 1, this->m - 1);
 
     free(array);
 
@@ -1687,28 +1777,30 @@ MatrixClass *MatrixClass::cofactor_of(size_t line, size_t column)
     return result;
 }
 
-MatrixClass::MatrixClass()
+template <typename T>
+MatrixClass<T>::MatrixClass()
 {
-    before_each(this, "MatrixClass");
+    before_each(this, "MatrixClass<T>");
 
     this->m = 0;
     this->n = 0;
     this->content = NULL;
 
-    if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_CREATION))
-        printf(COLOR_GREEN "[MatrixClass]:" COLOR_RESET "empty matrix got created\n");
+    if (MatrixClass<T>::is_debug_option_set(MatrixDebug::MATRIX_CREATION))
+        printf(COLOR_GREEN "[MatrixClass<T>]:" COLOR_RESET "empty matrix got created\n");
 
-    MatrixClass::created_matrices++;
+    MatrixClass<T>::created_matrices++;
 
-    after_each(this, "MatrixClass");
+    after_each(this, "MatrixClass<T>");
 }
 
-MatrixClass *MatrixClass::permute_lines(size_t L1, size_t L2, bool destructive)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::permute_lines(size_t L1, size_t L2, bool destructive)
 {
     before_each(this, "permute_lines");
 
     float temp;
-    MatrixClass *result = destructive ? this : this->copy();
+    MatrixClass<T> *result = destructive ? this : this->copy();
 
     for (size_t j = 0; j < result->m; j++)
     {
@@ -1722,12 +1814,13 @@ MatrixClass *MatrixClass::permute_lines(size_t L1, size_t L2, bool destructive)
     return result;
 }
 
-MatrixClass *MatrixClass::permute_columns(size_t C1, size_t C2, bool destructive)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::permute_columns(size_t C1, size_t C2, bool destructive)
 {
     before_each(this, "permute_columns");
 
     float temp;
-    MatrixClass *result = destructive ? this : this->copy();
+    MatrixClass<T> *result = destructive ? this : this->copy();
 
     for (size_t i = 0; i < result->n; i++)
     {
@@ -1742,21 +1835,23 @@ MatrixClass *MatrixClass::permute_columns(size_t C1, size_t C2, bool destructive
 }
 
 /*not set*/
-MatrixClass *MatrixClass::create_matrix(size_t n, size_t m)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::create_matrix(size_t n, size_t m)
 {
-    return new MatrixClass(n, m);
+    return new MatrixClass<T>(n, m);
 }
 
 /*not set*/
-MatrixClass *MatrixClass::matrix_from_array(MatrixType type, float *array, size_t n, size_t m)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::matrix_from_array(MatrixType type, T *array, size_t n, size_t m)
 {
     int counter = 0;
-    MatrixClass *matrix = new MatrixClass(n, m);
+    MatrixClass<T> *matrix = new MatrixClass<T>(n, m);
 
     // check that the sizes are compatible
 
     matrix->map(
-        type, [&array, &counter](size_t i, size_t j, float element) -> float
+        type, [&array, &counter](size_t i, size_t j, T element) -> T
         { return array[counter++]; },
         true);
 
@@ -1764,13 +1859,14 @@ MatrixClass *MatrixClass::matrix_from_array(MatrixType type, float *array, size_
 }
 
 /*not set*/
-MatrixClass *MatrixClass::create_matrix_with(MatrixType type, size_t n, size_t m, float number)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::create_matrix_with(MatrixType type, size_t n, size_t m, T number)
 {
 
-    MatrixClass *matrix = new MatrixClass(n, m);
+    MatrixClass<T> *matrix = new MatrixClass<T>(n, m);
 
     matrix->map(
-        type, [number](size_t i, size_t j, float element) -> float
+        type, [number](size_t i, size_t j, T element) -> T
         { return number; },
         true);
 
@@ -1778,58 +1874,48 @@ MatrixClass *MatrixClass::create_matrix_with(MatrixType type, size_t n, size_t m
 }
 
 /*not set*/
-MatrixClass *MatrixClass::create_matrix_random_int(MatrixType type, size_t n, size_t m, int min, int max)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::create_matrix_random(MatrixType type, size_t n, size_t m)
 {
-    MatrixClass *matrix = new MatrixClass(n, m);
+    MatrixClass<T> *matrix = new MatrixClass<T>(n, m);
 
     matrix->map(
-        type, [min, max](size_t i, size_t j, float number) -> float
-        { return (float)random_integer(min, max); },
+        type, [](size_t i, size_t j, T number) -> T
+        { return T::random(); },
         true);
 
     return matrix;
 }
 
-/*not set*/
-MatrixClass *MatrixClass::create_matrix_random_float(MatrixType type, size_t n, size_t m, float min, float max)
+template <typename T>
+MatrixClass<T>::MatrixClass(size_t n, size_t m)
 {
-    MatrixClass *matrix = new MatrixClass(n, m);
+    before_each(this, "MatrixClass<T>(size_t, size_t)");
 
-    matrix->map(
-        type, [min, max](size_t i, size_t j, float number) -> float
-        { return random_float(min, max); },
-        true);
-
-    return matrix;
-}
-
-MatrixClass::MatrixClass(size_t n, size_t m)
-{
-    before_each(this, "MatrixClass(size_t, size_t)");
-
-    MatrixClass::created_matrices++;
+    MatrixClass<T>::created_matrices++;
 
     this->n = n;
     this->m = m;
     this->content = this->allocate_matrix(n, m);
 
-    if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_CREATION))
-        printf(COLOR_GREEN "[MatrixClass]:" COLOR_RESET "matrix got created\n");
+    if (MatrixClass<T>::is_debug_option_set(MatrixDebug::MATRIX_CREATION))
+        printf(COLOR_GREEN "[MatrixClass<T>]:" COLOR_RESET "matrix got created\n");
 
     this->matrices.push_front(this);
 
-    after_each(this, "MatrixClass(size_t, size_t)");
+    after_each(this, "MatrixClass<T>(size_t, size_t)");
 }
 
-float **MatrixClass::allocate_matrix(size_t n, size_t m)
+template <typename T>
+T **MatrixClass<T>::allocate_matrix(size_t n, size_t m)
 {
-    float **result = NULL;
+    T **result = NULL;
 
-    result = (float **)calloc(n, sizeof(float *));
+    result = (T **)calloc(n, sizeof(T *));
 
     for (size_t i = 0; i < n; i++)
     {
-        result[i] = (float *)calloc(m, sizeof(float));
+        result[i] = (T *)calloc(m, sizeof(T));
         if (result[i] == NULL)
         {
             printf("[allocate_matrix]: NULL\n");
@@ -1838,19 +1924,20 @@ float **MatrixClass::allocate_matrix(size_t n, size_t m)
         }
     }
 
-    if (MatrixClass::is_debug_option_set(MatrixDebug::MATRIX_ALLOCATION))
-        printf(COLOR_GREEN "[MatrixClass-allocate_matrix]:" COLOR_RESET "matrix-content allocation has been made\n");
+    if (MatrixClass<T>::is_debug_option_set(MatrixDebug::MATRIX_ALLOCATION))
+        printf(COLOR_GREEN "[MatrixClass<T>-allocate_matrix]:" COLOR_RESET "matrix-content allocation has been made\n");
 
-    MatrixClass::allocated_matrices++;
+    MatrixClass<T>::allocated_matrices++;
 
     return result;
 }
 
-MatrixClass *MatrixClass::copy()
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::copy()
 {
     before_each(this, "copy");
 
-    auto result = MatrixClass::copy(this);
+    auto result = MatrixClass<T>::copy(this);
 
     after_each(this, "copy");
 
@@ -1858,9 +1945,10 @@ MatrixClass *MatrixClass::copy()
 }
 
 /*not set*/
-MatrixClass *MatrixClass::copy(MatrixClass *matrix)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::copy(MatrixClass<T> *matrix)
 {
-    MatrixClass *result = new MatrixClass(matrix->n, matrix->m);
+    MatrixClass<T> *result = new MatrixClass<T>(matrix->n, matrix->m);
 
     result->map(
         NORMAL, [&matrix](size_t i, size_t j, float element) -> float
@@ -1871,35 +1959,38 @@ MatrixClass *MatrixClass::copy(MatrixClass *matrix)
 }
 
 /*not set*/
-void MatrixClass::srand(unsigned int seed)
+template <typename T>
+void MatrixClass<T>::srand(unsigned int seed)
 {
-    MatrixClass::seed = seed;
+    MatrixClass<T>::seed = seed;
 }
 
 /*not set*/
-MatrixClass *MatrixClass::add_matrix_matrix(MatrixClass *matrix_A, MatrixClass *matrix_B)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::add_matrix_matrix(MatrixClass<T> *matrix_A, MatrixClass<T> *matrix_B)
 {
-    MatrixClass *result = new MatrixClass(matrix_A->n, matrix_A->m);
+    MatrixClass<T> *result = new MatrixClass<T>(matrix_A->n, matrix_A->m);
 
     // TODO: check that matriceA and matriceB are of the same dimensions
 
     result->map(
-        NORMAL, [&matrix_A, &matrix_B](size_t i, size_t j, float element) -> float
-        { return matrix_A->get(i, j) + matrix_B->get(i, j); },
+        NORMAL, [&matrix_A, &matrix_B](size_t i, size_t j, T element) -> T
+        { return matrix_A->get(i, j, 0).add(matrix_B->get(i, j, 0)); },
         true);
 
     return result;
 }
 
 /*not set*/
-MatrixClass *MatrixClass::subtract_matrix_matrix(MatrixClass *matrix_A, MatrixClass *matrix_B)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::subtract_matrix_matrix(MatrixClass<T> *matrix_A, MatrixClass<T> *matrix_B)
 {
-    MatrixClass *result = new MatrixClass(matrix_A->n, matrix_A->m);
+    MatrixClass<T> *result = new MatrixClass<T>(matrix_A->n, matrix_A->m);
 
     // TODO: check that matriceA and matriceB are of the same dimensions
 
     result->map(
-        NORMAL, [&matrix_A, &matrix_B](size_t i, size_t j, float element) -> float
+        NORMAL, [&matrix_A, &matrix_B](size_t i, size_t j, T element) -> T
         { return matrix_A->get(i, j) - matrix_B->get(i, j); },
         true);
 
@@ -1907,12 +1998,13 @@ MatrixClass *MatrixClass::subtract_matrix_matrix(MatrixClass *matrix_A, MatrixCl
 }
 
 /*not set*/
-MatrixClass *MatrixClass::add_matrix_float(MatrixClass *matrix, float a)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::add_matrix_value(MatrixClass<T> *matrix, T a)
 {
-    MatrixClass *result = new MatrixClass(matrix->n, matrix->m);
+    MatrixClass<T> *result = new MatrixClass<T>(matrix->n, matrix->m);
 
     result->map(
-        NORMAL, [&matrix, &a](size_t i, size_t j, float element) -> float
+        NORMAL, [&matrix, &a](size_t i, size_t j, T element) -> T
         { return matrix->get(i, j) + a; },
         true);
 
@@ -1920,18 +2012,20 @@ MatrixClass *MatrixClass::add_matrix_float(MatrixClass *matrix, float a)
 }
 
 /*not set*/
-MatrixClass *MatrixClass::substract_matrix_float(MatrixClass *matrix, float a)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::substract_matrix_value(MatrixClass<T> *matrix, T a)
 {
     return add_matrix_float(matrix, -a);
 }
 
 /*not set*/
-MatrixClass *MatrixClass::multiply_matrix_float(MatrixClass *matrix, float a)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::multiply_matrix_value(MatrixClass<T> *matrix, T a)
 {
-    MatrixClass *result = new MatrixClass(matrix->n, matrix->m);
+    MatrixClass<T> *result = new MatrixClass<T>(matrix->n, matrix->m);
 
     result->map(
-        NORMAL, [&matrix, &a](size_t i, size_t j, float element) -> float
+        NORMAL, [&matrix, &a](size_t i, size_t j, T element) -> T
         { return matrix->get(i, j) * a; },
         true);
 
@@ -1939,19 +2033,21 @@ MatrixClass *MatrixClass::multiply_matrix_float(MatrixClass *matrix, float a)
 }
 
 /*not set*/
-MatrixClass *MatrixClass::divide_matrix_float(MatrixClass *matrix, float a)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::divide_matrix_value(MatrixClass<T> *matrix, T a)
 {
-    MatrixClass *result = new MatrixClass(matrix->n, matrix->m);
+    MatrixClass<T> *result = new MatrixClass<T>(matrix->n, matrix->m);
 
     result->map(
-        NORMAL, [&matrix, &a](size_t i, size_t j, float element) -> float
+        NORMAL, [&matrix, &a](size_t i, size_t j, T element) -> T
         { return matrix->get(i, j) / a; },
         true);
 
     return result;
 }
 
-void MatrixClass::for_each(MatrixType type, Consumer consumer)
+template <typename T>
+void MatrixClass<T>::for_each(MatrixType type, Consumer<T> consumer)
 {
     before_each(this, "for_each");
 
@@ -1993,7 +2089,8 @@ void MatrixClass::for_each(MatrixType type, Consumer consumer)
 
     after_each(this, "fpr_each");
 }
-void MatrixClass::for_each_line(size_t line, Consumer consumer)
+template <typename T>
+void MatrixClass<T>::for_each_line(size_t line, Consumer<T> consumer)
 {
     before_each(this, "for_each_line");
 
@@ -2003,7 +2100,8 @@ void MatrixClass::for_each_line(size_t line, Consumer consumer)
     after_each(this, "for_each_line");
 }
 
-void MatrixClass::for_each_column(size_t column, Consumer consumer)
+template <typename T>
+void MatrixClass<T>::for_each_column(size_t column, Consumer<T> consumer)
 {
     before_each(this, "for_each_column");
 
@@ -2013,7 +2111,8 @@ void MatrixClass::for_each_column(size_t column, Consumer consumer)
     after_each(this, "for_each_column");
 }
 
-void MatrixClass::destroy()
+template <typename T>
+void MatrixClass<T>::destroy()
 {
     before_each(this, "destroy");
 
@@ -2022,11 +2121,12 @@ void MatrixClass::destroy()
     after_each(this, "destroy");
 }
 
-MatrixClass *MatrixClass::map(MatrixType type, Producer producer, bool inplace)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::map(MatrixType type, Producer<T> producer, bool inplace)
 {
     before_each(this, "map");
 
-    MatrixClass *result;
+    MatrixClass<T> *result;
 
     if ((type == DIAGONAL || type == UPPER_TRIANGLE || type == LOWER_TRIANGLE) && !this->is_square())
     {
@@ -2034,7 +2134,7 @@ MatrixClass *MatrixClass::map(MatrixType type, Producer producer, bool inplace)
         return NULL;
     }
 
-    result = inplace ? this : new MatrixClass(this->n, this->m);
+    result = inplace ? this : new MatrixClass<T>(this->n, this->m);
 
     switch (type)
     {
@@ -2067,11 +2167,12 @@ MatrixClass *MatrixClass::map(MatrixType type, Producer producer, bool inplace)
 
     return result;
 }
-MatrixClass *MatrixClass::map_line(size_t line, Producer producer, bool inplace)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::map_line(size_t line, Producer<T> producer, bool inplace)
 {
     before_each(this, "map_line");
 
-    MatrixClass *result = inplace ? this : new MatrixClass(this->n, this->m);
+    MatrixClass<T> *result = inplace ? this : new MatrixClass<T>(this->n, this->m);
 
     for (size_t j = 0; j < this->m; j++)
         (*result)[line][j] = producer(line, j, (*this)[line][j]);
@@ -2081,11 +2182,12 @@ MatrixClass *MatrixClass::map_line(size_t line, Producer producer, bool inplace)
     return result;
 }
 
-MatrixClass *MatrixClass::map_column(size_t column, Producer producer, bool inplace)
+template <typename T>
+MatrixClass<T> *MatrixClass<T>::map_column(size_t column, Producer<T> producer, bool inplace)
 {
     before_each(this, "map_column");
 
-    MatrixClass *result = inplace ? this : new MatrixClass(this->n, this->m);
+    MatrixClass<T> *result = inplace ? this : new MatrixClass<T>(this->n, this->m);
 
     for (size_t i = 0; i < this->n; i++)
         (*result)[i][column] = producer(i, column, (*this)[i][column]);

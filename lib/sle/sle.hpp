@@ -18,6 +18,7 @@ typedef SystemDebug SystemDebug;
 /*
     Throw Exceptions in C
 */
+template <typename T>
 class Sle
 {
 private:
@@ -25,8 +26,8 @@ private:
     std::string name = "";
     std::size_t order = 0;
 
-    MatrixClass *matrix = NULL;
-    MatrixClass *vector = NULL;
+    MatrixClass<T> *matrix = NULL;
+    MatrixClass<T> *vector = NULL;
 
     inline static unsigned int seed = 45;
     inline static SystemDebug debug_options = SystemDebug::SYSTEM_NONE;
@@ -35,7 +36,7 @@ private:
 
     Sle();
     Sle(std::size_t order);
-    Sle(MatrixClass *matrix, MatrixClass *vector);
+    Sle(MatrixClass<T> *matrix, MatrixClass<T> *vector);
 
     ~Sle();
 
@@ -46,7 +47,7 @@ public:
     static bool is_debug_option_set(SystemDebug debug_option);
 
     static Sle *creaate_system(std::size_t order);
-    static Sle *creaate_system(MatrixClass *matrix, MatrixClass *vector);
+    static Sle *creaate_system(MatrixClass<T> *matrix, MatrixClass<T> *vector);
 
     // we don't use the matrix and vector you provide, we just make copies of them
     // we return NULL from the constructor if the creation fails
@@ -59,8 +60,8 @@ public:
 
     std::size_t get_order();
 
-    void set_matrix(MatrixClass *matrix);
-    void set_vector(MatrixClass *vector);
+    void set_matrix(MatrixClass<T> *matrix);
+    void set_vector(MatrixClass<T> *vector);
 
     void read(); /*implement it*/
     void print();
@@ -73,12 +74,12 @@ public:
     // need optimisation on the jordan part
     Sle *gauss_jordan(bool inplace = false);
 
-    MatrixClass *solve_cramer();
-    MatrixClass *solve_diagonal();
-    MatrixClass *solve_upper_triangular();
-    MatrixClass *solve_lower_triangular();
+    MatrixClass<T> *solve_cramer();
+    MatrixClass<T> *solve_diagonal();
+    MatrixClass<T> *solve_upper_triangular();
+    MatrixClass<T> *solve_lower_triangular();
 
-    MatrixClass *solve(MatrixType type);
+    MatrixClass<T> *solve(MatrixType type);
 
     static Sle *create_power_system(std::size_t order);
     static Sle *create_hilbert_system(std::size_t order);
@@ -86,6 +87,7 @@ public:
     static Sle *create_random_float_system(std::size_t order, float min = 0, float max = 10);
 };
 
-std::ostream &operator<<(std::ostream &os, Sle &sle);
+template <typename T>
+std::ostream &operator<<(std::ostream &os, Sle<T> &sle);
 
 #endif

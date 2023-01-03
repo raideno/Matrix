@@ -13,6 +13,22 @@ uint32_t create_pixel(uint8_t alpha, uint8_t red, uint8_t green, uint8_t blue)
     return ((alpha & 0xff) << 24) + ((red & 0xff) << 16) + ((green & 0xff) << 8) + ((blue & 0xff));
 }
 
+int read_byte_at(FILE *file, int offset, int size)
+{
+    // size can't be more than 4, otherwise we can't return it
+
+    int result;
+    int long save = ftell(file);
+
+    fseek(file, offset, SEEK_SET);
+
+    fread(&result, size, 1, file);
+
+    fseek(file, save, SEEK_SET);
+
+    return result;
+}
+
 BitMapFile *read_bit_map_file(const std::string &name)
 {
     FILE *file = NULL;
@@ -62,22 +78,6 @@ BitMapFile *read_bit_map_file(const std::string &name)
         fread(&buffer, result->bits_per_pixel / 8, 1, file);
         read_pixel(buffer, &result->content[i].alpha, &result->content[i].red, &result->content[i].green, &result->content[i].blue);
     }
-
-    return result;
-}
-
-int read_byte_at(FILE *file, int offset, int size)
-{
-    // size can't be more than 4, otherwise we can't return it
-
-    int result;
-    int long save = ftell(file);
-
-    fseek(file, offset, SEEK_SET);
-
-    fread(&result, size, 1, file);
-
-    fseek(file, save, SEEK_SET);
 
     return result;
 }

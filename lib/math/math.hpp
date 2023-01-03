@@ -4,8 +4,11 @@
 #include "../util/util.hpp"
 #include "../matrix/matrix.hpp"
 
-MatrixClass *convolution(MatrixClass *entries, MatrixClass *kernel);
-MatrixClass *vector_convolution(MatrixClass *array, MatrixClass *kernel);
-MatrixClass *matrix_convolution(MatrixClass *matrix, MatrixClass *kernel);
+template <typename T>
+MatrixClass<T> *convolution(MatrixClass<T> *entries, MatrixClass<T> *kernel);
+template <typename T>
+MatrixClass<T> *vector_convolution(MatrixClass<T> *array, MatrixClass<T> *kernel);
+template <typename T>
+MatrixClass<T> *matrix_convolution(MatrixClass<T> *matrix, MatrixClass<T> *kernel);
 
 #endif

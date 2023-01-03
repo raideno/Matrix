@@ -1,6 +1,8 @@
 #ifndef __MATRIX_HPP__
 #define __MATRIX_HPP__
 
+#include <type_traits>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,10 +42,14 @@ enum MatrixDebug
     MATRIX_ALL = MATRIX_CREATION | MATRIX_ALLOCATION | MATRIX_DESTRUCTION | MATRIX_DESALLOCATION | MATRIX_MISC,
 };
 
-typedef const std::function<void(size_t i, size_t j, float value)> &Consumer;
-typedef const std::function<float(float acumulator, size_t i, size_t j, float value)> &Reducer;
-typedef const std::function<float(size_t i, size_t j, float value)> &Producer;
-typedef const std::function<bool(size_t i, size_t j, float value)> &BooleanProducer;
+template <class T>
+using Consumer = const std::function<void(size_t i, size_t j, T value)>;
+template <class T>
+using Reducer = const std::function<float(float acumulator, size_t i, size_t j, T value)>;
+template <class T>
+using Producer = const std::function<T(size_t i, size_t j, T value)>;
+template <class T>
+using BooleanProducer = const std::function<bool(size_t i, size_t j, T value)>;
 
 /*row and column operations*/
 
@@ -56,23 +62,21 @@ class MatrixValue
 {
 private:
 public:
-    virtual void print();
-    virtual MatrixValue *addition(MatrixValue *value);
-    virtual MatrixValue *multiply(MatrixValue *value);
-    virtual MatrixValue *substract(MatrixValue *value);
-    virtual MatrixValue *divide(MatrixValue *value);
+    void print() {}
+    MatrixValue add(MatrixValue value) {}
+    MatrixValue mul(MatrixValue value) {}
+    MatrixValue sub(MatrixValue value) {}
+    MatrixValue div(MatrixValue value) {}
+    static MatrixValue rand() {}
 };
 
-class Float : public MatrixValue
-{
-private:
-};
-
+template <typename T>
 class MatrixClass
 {
+    static_assert(std::is_base_of<MatrixValue, T>{}, "doit dérive de MatrixValue");
 
 private:
-    float **content = NULL;
+    T **content = NULL;
 
     std::string id = "";
     std::string name = "";
@@ -93,7 +97,7 @@ private:
     static void desallocate(MatrixClass *matrix);
     static void desallocate_matrices(size_t n_args, ...);
 
-    static float **allocate_matrix(size_t n, size_t m);
+    static T **allocate_matrix(size_t n, size_t m);
 
     static std::string generate_unique_id(size_t n, size_t m);
 
@@ -112,8 +116,6 @@ public:
     /*valeurs propres, vecteurs propres*/
     /*delimité une matrice, sous matrice*/
 
-    MatrixClass *convolution(MatrixClass *matrix);
-
     static void srand(unsigned int seed);
 
     static void set_debug_options(MatrixDebug debug);
@@ -124,14 +126,13 @@ public:
     // creation stuff
     /*----*/
     static MatrixClass *create_matrix(size_t n, size_t m);
-    static MatrixClass *matrix_from_array(MatrixType type, float *array, size_t n, size_t m);
-    static MatrixClass *create_matrix_with(MatrixType type, size_t n, size_t m, float number);
-    static MatrixClass *create_matrix_random_int(MatrixType type, size_t n, size_t m, int min = 0, int max = 10);
-    static MatrixClass *create_matrix_random_float(MatrixType type, size_t n, size_t m, float min = 0, float max = 1);
+    static MatrixClass *matrix_from_array(MatrixType type, T *array, size_t n, size_t m);
+    static MatrixClass *create_matrix_with(MatrixType type, size_t n, size_t m, T value);
+    static MatrixClass *create_matrix_random(MatrixType type, size_t n, size_t m);
     /*----*/
 
-    void set(size_t i, size_t j, float element);
-    float get(size_t i, size_t j, float default_return_value = 0);
+    void set(size_t i, size_t j, T value);
+    T get(size_t i, size_t j, T default_return_value = T());
 
     const std::string &get_name();
     MatrixClass *set_name(const std::string &name);
@@ -143,25 +144,25 @@ public:
 
     MatrixClass *round(bool inplace = false);
 
-    void for_each(MatrixType type, Consumer consumer);
-    void for_each_line(size_t line, Consumer consumer);
-    void for_each_column(size_t column, Consumer consumer);
+    void for_each(MatrixType type, Consumer<T> consumer);
+    void for_each_line(size_t line, Consumer<T> consumer);
+    void for_each_column(size_t column, Consumer<T> consumer);
 
-    MatrixClass *map(MatrixType type, Producer consumer, bool inplace = false);
-    MatrixClass *map_line(size_t line, Producer consumer, bool inplace = false);
-    MatrixClass *map_column(size_t column, Producer consumer, bool inplace = false);
+    MatrixClass *map(MatrixType type, Producer<T> producer, bool inplace = false);
+    MatrixClass *map_line(size_t line, Producer<T> producer, bool inplace = false);
+    MatrixClass *map_column(size_t column, Producer<T> producer, bool inplace = false);
 
-    float reduce(MatrixType type, Reducer reducer, float initialValue = 0);
-    float reduce_line(size_t line, Reducer reducer, float initialValue = 0);
-    float reduce_column(size_t column, Reducer reducer, float initialValue = 0);
+    T reduce(MatrixType type, Reducer<T> reducer, T initialValue);
+    T reduce_line(size_t line, Reducer<T> reducer, T initialValue);
+    T reduce_column(size_t column, Reducer<T> reducer, T initialValue);
 
-    bool all(MatrixType type, BooleanProducer boolean_producer);
-    bool line_all(size_t line, BooleanProducer boolean_producer);
-    bool column_all(size_t column, BooleanProducer boolean_producer);
+    bool all(MatrixType type, BooleanProducer<T> boolean_producer);
+    bool line_all(size_t line, BooleanProducer<T> boolean_producer);
+    bool column_all(size_t column, BooleanProducer<T> boolean_producer);
 
-    bool one(MatrixType type, BooleanProducer boolean_producer);
-    bool line_one(size_t line, BooleanProducer boolean_producer);
-    bool column_one(size_t column, BooleanProducer boolean_producer);
+    bool one(MatrixType type, BooleanProducer<T> boolean_producer);
+    bool line_one(size_t line, BooleanProducer<T> boolean_producer);
+    bool column_one(size_t column, BooleanProducer<T> boolean_producer);
 
     MatrixClass *permute_lines(size_t L1, size_t L2, bool destructive = false);
     MatrixClass *permute_columns(size_t C1, size_t C2, bool destructive = false);
@@ -197,23 +198,23 @@ public:
     MatrixClass *delete_columns(size_t start, size_t end);
     MatrixClass *crop(size_t startLine, size_t endLine, size_t startColumn, size_t endColumn);
 
-    float trace();
-    float determinent();
+    T trace();
+    T determinent();
 
     static MatrixClass *add_matrix_matrix(MatrixClass *matrix_A, MatrixClass *matrix_B);
     static MatrixClass *subtract_matrix_matrix(MatrixClass *matrix_A, MatrixClass *matrix_B);
     static MatrixClass *divide_matrix_matrix(MatrixClass *matrix_A, MatrixClass *matrix_B);
     static MatrixClass *multiply_matrix_matrix(MatrixClass *matrix_A, MatrixClass *matrix_B);
 
-    static MatrixClass *add_matrix_float(MatrixClass *matrix, float a);
-    static MatrixClass *substract_matrix_float(MatrixClass *matrix, float a);
-    static MatrixClass *multiply_matrix_float(MatrixClass *matrix, float a);
-    static MatrixClass *divide_matrix_float(MatrixClass *matrix, float a);
+    static MatrixClass *add_matrix_value(MatrixClass *matrix, T a);
+    static MatrixClass *substract_matrix_value(MatrixClass *matrix, T a);
+    static MatrixClass *multiply_matrix_value(MatrixClass *matrix, T a);
+    static MatrixClass *divide_matrix_value(MatrixClass *matrix, T a);
 
     MatrixClass *dot(MatrixClass *matrix);
 
     static MatrixClass *matrix_multiplication(MatrixClass *matrix_A, MatrixClass *matrix_B);
-    static float multiply_matrix_line_matrix_column(MatrixClass *matrix_A, MatrixClass *matrix_B, size_t LINE, size_t COLUMN);
+    static T multiply_matrix_line_matrix_column(MatrixClass *matrix_A, MatrixClass *matrix_B, size_t LINE, size_t COLUMN);
 
     std::pair<size_t, size_t> min(MatrixType type, size_t *maxI, size_t *maxJ, bool abs = false);
     size_t min_line(size_t line, bool abs = false);
@@ -233,8 +234,8 @@ public:
 
     static MatrixClass *replace_lines(MatrixClass *matrix_A, size_t Afrom, size_t Ato, MatrixClass *matrix_B, size_t Bfrom, size_t Bto);
     static MatrixClass *replace_columns(MatrixClass *matrix_A, size_t Afrom, size_t Ato, MatrixClass *matrix_B, size_t Bfrom, size_t Bto);
-    static MatrixClass *replace_lines_with(MatrixClass *matrix_A, size_t Afrom, size_t Ato, float number);
-    static MatrixClass *replace_columns_with(MatrixClass *matrix_A, size_t Afrom, size_t Ato, float number);
+    static MatrixClass *replace_lines_with(MatrixClass *matrix_A, size_t Afrom, size_t Ato, T number);
+    static MatrixClass *replace_columns_with(MatrixClass *matrix_A, size_t Afrom, size_t Ato, T number);
 
     MatrixClass *select_lines_array(size_t *array, size_t size);
     MatrixClass *select_columns_array(size_t *array, size_t size);
@@ -274,22 +275,23 @@ public:
     MatrixClass *operator*(MatrixClass *matrix);
     MatrixClass *operator/(MatrixClass *matrix);
 
-    MatrixClass *operator+(float number);
-    MatrixClass *operator-(float number);
-    MatrixClass *operator*(float number);
-    MatrixClass *operator/(float number);
+    MatrixClass *operator+(T number);
+    MatrixClass *operator-(T number);
+    MatrixClass *operator*(T number);
+    MatrixClass *operator/(T number);
 
-    MatrixClass *operator+=(float number);
-    MatrixClass *operator/=(float number);
-    MatrixClass *operator*=(float number);
-    MatrixClass *operator-=(float number);
+    MatrixClass *operator+=(T number);
+    MatrixClass *operator/=(T number);
+    MatrixClass *operator*=(T number);
+    MatrixClass *operator-=(T number);
 
     MatrixClass *operator++();
     MatrixClass *operator--();
 
-    float *operator[](size_t i);
+    T *operator[](size_t i);
 };
 
-std::ostream &operator<<(std::ostream &os, MatrixClass &matrix);
+template <class T = MatrixValue>
+std::ostream &operator<<(std::ostream &os, MatrixClass<T> &matrix);
 
 #endif

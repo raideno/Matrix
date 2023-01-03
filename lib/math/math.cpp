@@ -10,26 +10,28 @@
     it only work for 3x3 matrices
 */
 
-MatrixClass *convolution(MatrixClass *entries, MatrixClass *kernel)
+template <typename T>
+MatrixClass<T> *convolution(MatrixClass<T> *entries, MatrixClass<T> *kernel)
 {
     auto [n_1, m_1] = entries->size();
 
     return n_1 > 1 ? matrix_convolution(entries, kernel) : vector_convolution(entries, kernel);
 }
 
-MatrixClass *matrix_convolution(MatrixClass *matrix, MatrixClass *kernel)
+template <typename T>
+MatrixClass<T> *matrix_convolution(MatrixClass<T> *matrix, MatrixClass<T> *kernel)
 {
 
     /*make sure those two are matrices*/
 
     auto [n_1, m_1] = matrix->size();
 
-    MatrixClass *result = NULL;
+    MatrixClass<T> *result = NULL;
 
     if (!kernel->have_center())
         return NULL;
 
-    result = MatrixClass::create_matrix(n_1, m_1);
+    result = MatrixClass<T>::create_matrix(n_1, m_1);
     kernel = kernel->flip();
 
     result->map(
@@ -45,16 +47,17 @@ MatrixClass *matrix_convolution(MatrixClass *matrix, MatrixClass *kernel)
     return result;
 }
 
-MatrixClass *vector_convolution(MatrixClass *array, MatrixClass *kernel)
+template <typename T>
+MatrixClass<T> *vector_convolution(MatrixClass<T> *array, MatrixClass<T> *kernel)
 {
     auto [n_1, m_1] = array->size();
     auto [n_2, m_2] = kernel->size();
 
-    MatrixClass *result = NULL;
+    MatrixClass<T> *result = NULL;
 
     /*make sure those two are arrays*/
 
-    result = MatrixClass::create_matrix(1, m_1 + m_2 - 1);
+    result = MatrixClass<T>::create_matrix(1, m_1 + m_2 - 1);
     kernel = kernel->flip();
 
     result->map(

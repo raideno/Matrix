@@ -4,68 +4,78 @@
 #include "../util/util.hpp"
 #include "../matrix/matrix.hpp"
 
-void Sle::set_matrix(MatrixClass *matrix)
+template <typename T>
+void Sle<T>::set_matrix(MatrixClass<T> *matrix)
 {
     // check that the order is the same
     this->matrix = matrix != NULL ? matrix->copy() : NULL;
 }
 
-void Sle::set_vector(MatrixClass *vector)
+template <typename T>
+void Sle<T>::set_vector(MatrixClass<T> *vector)
 {
     this->vector = vector != NULL ? vector->copy() : NULL;
 }
 
-const std::string &Sle::get_name()
+template <typename T>
+const std::string &Sle<T>::get_name()
 {
     return this->name;
 }
 
-std::size_t Sle::get_order()
+template <typename T>
+std::size_t Sle<T>::get_order()
 {
     return this->order;
 }
 
-Sle *Sle::creaate_system(std::size_t order)
+template <typename T>
+Sle<T> *Sle<T>::creaate_system(std::size_t order)
 {
-    return new Sle(order);
+    return new Sle<T>(order);
 }
 
-Sle *Sle::creaate_system(MatrixClass *matrix, MatrixClass *vector)
+template <typename T>
+Sle<T> *Sle<T>::creaate_system(MatrixClass<T> *matrix, MatrixClass<T> *vector)
 {
-    return new Sle(matrix, vector);
+    return new Sle<T>(matrix, vector);
 }
 
-Sle::Sle()
+template <typename T>
+Sle<T>::Sle()
 {
     this->order = 0;
     this->matrix = NULL;
     this->vector = NULL;
 
-    if (Sle::is_debug_option_set(SystemDebug::SYSTEM_CREATION))
-        printf(COLOR_GREEN "[Sle]:" COLOR_RESET "empty one got created\n");
+    if (Sle<T>::is_debug_option_set(SystemDebug::SYSTEM_CREATION))
+        printf(COLOR_GREEN "[Sle<T>]:" COLOR_RESET "empty one got created\n");
 }
 
-Sle::Sle(std::size_t order)
+template <typename T>
+Sle<T>::Sle(std::size_t order)
 {
     this->order = order;
-    this->matrix = MatrixClass::create_matrix(order, order)->set_name("matrix");
-    this->vector = MatrixClass::create_matrix(order, 1)->set_name("vector");
+    this->matrix = MatrixClass<T>::create_matrix(order, order)->set_name("matrix");
+    this->vector = MatrixClass<T>::create_matrix(order, 1)->set_name("vector");
 
-    if (Sle::is_debug_option_set(SystemDebug::SYSTEM_CREATION))
-        printf(COLOR_GREEN "[Sle]:" COLOR_RESET "one got created\n");
+    if (Sle<T>::is_debug_option_set(SystemDebug::SYSTEM_CREATION))
+        printf(COLOR_GREEN "[Sle<T>]:" COLOR_RESET "one got created\n");
 }
 
-void Sle::destroy()
+template <typename T>
+void Sle<T>::destroy()
 {
     delete this;
 }
 
-Sle::Sle(MatrixClass *matrix, MatrixClass *vector)
+template <typename T>
+Sle<T>::Sle(MatrixClass<T> *matrix, MatrixClass<T> *vector)
 {
     if (matrix == NULL || vector == NULL || vector->is_null() || matrix->is_null() || !matrix->is_square() || vector->size().first != matrix->size().first || vector->size().second != 1)
     {
-        if (Sle::is_debug_option_set(SystemDebug::SYSTEM_MISC))
-            printf(COLOR_RED "[Sle]:" COLOR_RESET "error while creating sle with given matrice and vector\n");
+        if (Sle<T>::is_debug_option_set(SystemDebug::SYSTEM_MISC))
+            printf(COLOR_RED "[Sle<T>]:" COLOR_RESET "error while creating sle<T> with given matrice and vector\n");
         this->set_matrix(NULL);
         this->set_vector(NULL);
         return;
@@ -76,77 +86,87 @@ Sle::Sle(MatrixClass *matrix, MatrixClass *vector)
     this->set_matrix(matrix);
     this->set_vector(vector);
 
-    if (Sle::is_debug_option_set(SystemDebug::SYSTEM_CREATION))
-        printf(COLOR_GREEN "[Sle]:" COLOR_RESET "one got created\n");
+    if (Sle<T>::is_debug_option_set(SystemDebug::SYSTEM_CREATION))
+        printf(COLOR_GREEN "[Sle<T>]:" COLOR_RESET "one got created\n");
 }
 
-Sle::~Sle()
+template <typename T>
+Sle<T>::~Sle<T>()
 {
-    if (Sle::is_debug_option_set(SystemDebug::SYSTEM_DESTRUCTION))
-        printf(COLOR_RED "[~Sle]:" COLOR_RESET "(%s) got destroyed\n", this->name.length() == 0 ? "/" : this->name.c_str());
+    if (Sle<T>::is_debug_option_set(SystemDebug::SYSTEM_DESTRUCTION))
+        printf(COLOR_RED "[~Sle<T>]:" COLOR_RESET "(%s) got destroyed\n", this->name.length() == 0 ? "/" : this->name.c_str());
 
     this->matrix->destroy();
     this->vector->destroy();
 }
 
-void Sle::set_debug_options(SystemDebug debug)
+template <typename T>
+void Sle<T>::set_debug_options(SystemDebug debug)
 {
-    Sle::debug_options = debug;
+    Sle<T>::debug_options = debug;
 }
 
-bool Sle::is_debug_option_set(SystemDebug debug_option)
+template <typename T>
+bool Sle<T>::is_debug_option_set(SystemDebug debug_option)
 {
-    return (Sle::debug_options & debug_option) == debug_option;
+    return (Sle<T>::debug_options & debug_option) == debug_option;
 }
 
-void Sle::srand(unsigned int seed)
+template <typename T>
+void Sle<T>::srand(unsigned int seed)
 {
-    Sle::seed = seed;
+    Sle<T>::seed = seed;
 }
 
-Sle *Sle::set_name(const std::string &name)
+template <typename T>
+Sle<T> *Sle<T>::set_name(const std::string &name)
 {
     this->name = name;
 
     return this;
 }
 
-Sle *Sle::copy()
+template <typename T>
+Sle<T> *Sle<T>::copy()
 {
-    MatrixClass *matrix = this->matrix->copy();
-    MatrixClass *vector = this->vector->copy();
+    MatrixClass<T> *matrix = this->matrix->copy();
+    MatrixClass<T> *vector = this->vector->copy();
 
-    return new Sle(matrix, vector);
+    return new Sle<T>(matrix, vector);
 }
 
-Sle *Sle::create_random_int_system(std::size_t order, int min, int max)
+template <typename T>
+Sle<T> *Sle<T>::create_random_int_system(std::size_t order, int min, int max)
 {
-    MatrixClass *matrix = MatrixClass::create_matrix_random_int(MatrixType::NORMAL, order, order, min, max);
-    MatrixClass *vector = MatrixClass::create_matrix_random_int(MatrixType::NORMAL, order, 1, min, max);
+    MatrixClass<T> *matrix = MatrixClass<T>::create_matrix_random_int(MatrixType::NORMAL, order, order, min, max);
+    MatrixClass<T> *vector = MatrixClass<T>::create_matrix_random_int(MatrixType::NORMAL, order, 1, min, max);
 
-    return new Sle(matrix, vector);
+    return new Sle<T>(matrix, vector);
 }
 
-Sle *Sle::create_random_float_system(std::size_t order, float min, float max)
+template <typename T>
+Sle<T> *Sle<T>::create_random_float_system(std::size_t order, float min, float max)
 {
-    MatrixClass *matrix = MatrixClass::create_matrix_random_float(MatrixType::NORMAL, order, order, min, max);
-    MatrixClass *vector = MatrixClass::create_matrix_random_float(MatrixType::NORMAL, order, 1, min, max);
+    MatrixClass<T> *matrix = MatrixClass<T>::create_matrix_random_float(MatrixType::NORMAL, order, order, min, max);
+    MatrixClass<T> *vector = MatrixClass<T>::create_matrix_random_float(MatrixType::NORMAL, order, 1, min, max);
 
-    return new Sle(matrix, vector);
+    return new Sle<T>(matrix, vector);
 }
 
-void Sle::print()
+template <typename T>
+void Sle<T>::print()
 {
     if (this->name.length() > 0)
         std::cout << this->name + ":" << std::endl;
 
-    MatrixClass::print_matrices_concatenation(2, this->matrix, this->vector);
+    MatrixClass<T>::print_matrices_concatenation(2, this->matrix, this->vector);
 }
 
-Sle *Sle::create_power_system(std::size_t order)
+template <typename T>
+Sle<T> *Sle<T>::create_power_system(std::size_t order)
 {
-    MatrixClass *matrix = MatrixClass::create_matrix(order, order)->set_name("power-system-matrix");
-    MatrixClass *vector = MatrixClass::create_matrix(order, 1)->set_name("power-system-vector");
+    MatrixClass<T> *matrix = MatrixClass<T>::create_matrix(order, order)->set_name("power-system-matrix");
+    MatrixClass<T> *vector = MatrixClass<T>::create_matrix(order, 1)->set_name("power-system-vector");
 
     for (size_t i = 0; i < order; i++)
     {
@@ -157,13 +177,14 @@ Sle *Sle::create_power_system(std::size_t order)
         }
     }
 
-    return new Sle(matrix, vector);
+    return new Sle<T>(matrix, vector);
 }
 
-Sle *Sle::create_hilbert_system(std::size_t order)
+template <typename T>
+Sle<T> *Sle<T>::create_hilbert_system(std::size_t order)
 {
-    MatrixClass *matrix = MatrixClass::create_matrix(order, order)->set_name("hilbert-system-matrix");
-    MatrixClass *vector = MatrixClass::create_matrix(order, 1)->set_name("hilbert-system-vector");
+    MatrixClass<T> *matrix = MatrixClass<T>::create_matrix(order, order)->set_name("hilbert-system-matrix");
+    MatrixClass<T> *vector = MatrixClass<T>::create_matrix(order, 1)->set_name("hilbert-system-vector");
 
     for (size_t i = 0; i < order; i++)
     {
@@ -174,18 +195,19 @@ Sle *Sle::create_hilbert_system(std::size_t order)
         }
     }
 
-    return new Sle(matrix, vector);
+    return new Sle<T>(matrix, vector);
 }
 
 // old:
 /*
-Sle *Sle::gauss_jordan(bool inplace)
+    template <typename T>
+Sle<T> *Sle<T>::gauss_jordan(bool inplace)
 {
     // check that it can work, and that pivots aren't null
 
     // always check that the system isn't empty
 
-    Sle *result = inplace ? this : this->copy();
+    Sle<T> *result = inplace ? this : this->copy();
 
     for (size_t k = 0; k < result->order; k++)
     {
@@ -227,13 +249,14 @@ Sle *Sle::gauss_jordan(bool inplace)
 }
 */
 
-Sle *Sle::gauss_jordan(bool inplace)
+template <typename T>
+Sle<T> *Sle<T>::gauss_jordan(bool inplace)
 {
     // check that it can work, and that pivots aren't null
 
     // always check that the system isn't empty
 
-    Sle *result = inplace ? this : this->copy();
+    Sle<T> *result = inplace ? this : this->copy();
 
     for (size_t k = 0; k < result->order; k++)
     {
@@ -274,13 +297,14 @@ Sle *Sle::gauss_jordan(bool inplace)
     return result;
 }
 
-Sle *Sle::gauss(bool inplace)
+template <typename T>
+Sle<T> *Sle<T>::gauss(bool inplace)
 {
     // check that it can work, and that pivots aren't null
 
     // always check that the system isn't empty
 
-    Sle *result = inplace ? this : this->copy();
+    Sle<T> *result = inplace ? this : this->copy();
 
     for (size_t k = 0; k < result->order - 1; k++)
     {
@@ -298,12 +322,13 @@ Sle *Sle::gauss(bool inplace)
 
     return result;
 }
+template <typename T>
 
-Sle *Sle::gauss_total(bool inplace)
+Sle<T> *Sle<T>::gauss_total(bool inplace)
 {
-    Sle *result = inplace ? this : this->copy();
+    Sle<T> *result = inplace ? this : this->copy();
 
-    MatrixClass *reference = MatrixClass::create_matrix_with(NORMAL, this->order, 2, -1);
+    MatrixClass<T> *reference = MatrixClass<T>::create_matrix_with(NORMAL, this->order, 2, -1);
 
     for (size_t k = 0; k < result->order - 1; k++)
     {
@@ -362,16 +387,17 @@ Sle *Sle::gauss_total(bool inplace)
         }
 
         printf("k=%ld\n", k);
-        MatrixClass::print_matrices_concatenation(2, matrix, vector);
+        MatrixClass<T>::print_matrices_concatenation(2, matrix, vector);
         printf("\n");
     }
 
     return result;
 }
 
-Sle *Sle::gauss_partial(bool inplace)
+template <typename T>
+Sle<T> *Sle<T>::gauss_partial(bool inplace)
 {
-    Sle *result = inplace ? this : this->copy();
+    Sle<T> *result = inplace ? this : this->copy();
 
     // check it's a square matrix
 
@@ -426,7 +452,8 @@ Sle *Sle::gauss_partial(bool inplace)
     return result;
 }
 
-MatrixClass *Sle::solve_cramer()
+template <typename T>
+MatrixClass<T> *Sle<T>::solve_cramer()
 {
     float determinent = this->matrix->determinent();
 
@@ -436,11 +463,11 @@ MatrixClass *Sle::solve_cramer()
         return NULL;
     }
 
-    MatrixClass *solutions = MatrixClass::create_matrix(this->order, 1);
+    MatrixClass<T> *solutions = MatrixClass<T>::create_matrix(this->order, 1);
 
     for (size_t i = 0; i < this->order; i++)
     {
-        MatrixClass *temp = MatrixClass::copy_matrix_in(matrix, vector, 0, i);
+        MatrixClass<T> *temp = MatrixClass<T>::copy_matrix_in(matrix, vector, 0, i);
         (*solutions)[i][0] = temp->determinent() / determinent;
         // Todo: make sure the matrice has been destroyed
         temp->destroy();
@@ -450,7 +477,8 @@ MatrixClass *Sle::solve_cramer()
     return solutions;
 }
 
-MatrixClass *Sle::solve_upper_triangular()
+template <typename T>
+MatrixClass<T> *Sle<T>::solve_upper_triangular()
 {
     float det = this->matrix->determinent();
 
@@ -460,7 +488,7 @@ MatrixClass *Sle::solve_upper_triangular()
         return NULL;
     }
 
-    MatrixClass *solutions = MatrixClass::create_matrix(this->order, 1);
+    MatrixClass<T> *solutions = MatrixClass<T>::create_matrix(this->order, 1);
 
     for (int i = this->order - 1; i >= 0; i--)
     {
@@ -475,7 +503,8 @@ MatrixClass *Sle::solve_upper_triangular()
     return solutions;
 }
 
-MatrixClass *Sle::solve_lower_triangular()
+template <typename T>
+MatrixClass<T> *Sle<T>::solve_lower_triangular()
 {
     float det = this->matrix->determinent();
 
@@ -485,7 +514,7 @@ MatrixClass *Sle::solve_lower_triangular()
         return NULL;
     }
 
-    MatrixClass *solutions = MatrixClass::create_matrix(this->order, 1);
+    MatrixClass<T> *solutions = MatrixClass<T>::create_matrix(this->order, 1);
 
     for (size_t i = 0; i < order; i++)
     {
@@ -500,7 +529,8 @@ MatrixClass *Sle::solve_lower_triangular()
     return solutions;
 }
 
-std::ostream &operator<<(std::ostream &os, Sle &sle)
+template <typename T>
+std::ostream &operator<<(std::ostream &os, Sle<T> &sle)
 {
     sle.print();
 
