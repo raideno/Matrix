@@ -5,27 +5,28 @@
 #include "lib/sle/sle.hpp"
 #include "lib/util/util.hpp"
 #include "lib/math/math.hpp"
+#include "lib/image/image.hpp"
 #include "lib/matrix/matrix.hpp"
-
-float arr_1[] = {1, 2, 3};
-float arr_2[] = {4, 5, 6};
 
 int main()
 {
     printf("[start]\n");
 
-    MatrixClass *array_1 = MatrixClass::matrix_from_array(NORMAL, arr_1, 1, 3);
-    MatrixClass *array_2 = MatrixClass::matrix_from_array(NORMAL, arr_2, 1, 3);
-    MatrixClass *result = convolution(array_1, array_2)->set_name("convolution");
+    BitMapFile *file = read_bit_map_file("image-2.bmp");
 
-    array_1->print();
-    array_2->print();
+    for (size_t i = 0; i <= file->width; i++)
+    {
+        file->content[file->width * file->height - i].alpha = 255;
+        file->content[file->width * file->height - i].red = 255;
+        file->content[file->width * file->height - i].green = 0;
+        file->content[file->width * file->height - i].blue = 0;
+    }
 
-    result->print();
+    persist_changes(file);
 
-    array_1->destroy();
-    array_2->destroy();
-    result->destroy();
+    printf("size_pixel: %ld\n", sizeof(Pixel));
+    printf("size: %d\n", file->size);
+    printf("bits_per_pixel: %d\n", file->bits_per_pixel);
 
     printf("[end]\n");
 

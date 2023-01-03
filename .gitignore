@@ -1,4 +1,3 @@
-a.out
 .vscode
 temp
 README.md
@@ -7,3 +6,6 @@ image.bmp
 *.o
 program
 build
+*.bmp
+*.txt
+*.out

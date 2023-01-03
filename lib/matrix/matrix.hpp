@@ -47,6 +47,27 @@ typedef const std::function<bool(size_t i, size_t j, float value)> &BooleanProdu
 
 /*row and column operations*/
 
+/*
+    need to define operators / functions of product, addition, soustraction and division
+    print function,
+*/
+
+class MatrixValue
+{
+private:
+public:
+    virtual void print();
+    virtual MatrixValue *addition(MatrixValue *value);
+    virtual MatrixValue *multiply(MatrixValue *value);
+    virtual MatrixValue *substract(MatrixValue *value);
+    virtual MatrixValue *divide(MatrixValue *value);
+};
+
+class Float : public MatrixValue
+{
+private:
+};
+
 class MatrixClass
 {
 
