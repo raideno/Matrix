@@ -6,7 +6,6 @@ image.bmp
 *.o
 program
 build
-*.bmp
 *.txt
 *.out
-other
+other/

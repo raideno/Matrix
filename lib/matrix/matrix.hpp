@@ -12,6 +12,23 @@
 #include <iostream>
 #include <functional>
 
+/**
+ * template class need to adhere some criterias:
+ * have some operators available
+ * have a null / empty value
+ */
+
+/**
+ * methods update:
+ * round(): remove
+ * lu_decomposition(): move it to math library
+ * operators: let them, but print errors if they are not implemented / available in the class
+ * max, min will require a comparaison function/lambda to be provided or <, > operators to be available in class
+ * read(): remove
+ * det(): re consider it
+ * move mathematical operations to math library and limit them to only certain types ?
+ */
+
 // functions to round, to transform to integer
 // functions to modify matrix print format, or pass format allon side with parameters
 

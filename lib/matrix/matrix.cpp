@@ -35,7 +35,7 @@ template <typename T>
 MatrixClass<T> *MatrixClass<T>::flip()
 {
     MatrixClass<T> *result = this->map(
-        NORMAL, [this](std::size_t i, std::size_t j, float value) -> float
+        NORMAL, [this](std::size_t i, std::size_t j, T value) -> T
         { 
             auto [n, m] = this->size();
             return this->get(n - i - 1, m - j - 1); });
@@ -62,7 +62,7 @@ MatrixClass<T> *MatrixClass<T>::round(bool inplace)
     before_each(this, "round");
 
     MatrixClass<T> *result = this->map(
-        MatrixType::NORMAL, [](size_t i, size_t j, float value) -> float
+        MatrixType::NORMAL, [](size_t i, size_t j, T value) -> T
         { return std::round(value); },
         inplace);
 
@@ -583,7 +583,8 @@ void MatrixClass<T>::print_line(size_t line, size_t precision, bool sign)
     for (size_t j = 0; j < this->m; j++)
     {
         // printf("%.2f", matrix->matrix[line][j]);
-        print_float(this->get(line, j), size, precision, ' ', sign);
+        this->get(line, j).print();
+        // print_float(this->get(line, j), size, precision, ' ', sign);
         printf("%s", j == this->m - 1 ? "\0" : ", ");
     }
     printf("]");
@@ -611,7 +612,8 @@ void MatrixClass<T>::print_col(size_t column, size_t precision, bool sign)
     printf("[");
     for (size_t i = 0; i < this->n; i++)
     {
-        print_float(this->get(i, column), size, precision, ' ', sign);
+        // print_float(this->get(i, column), size, precision, ' ', sign);
+        this->get(i, column).print();
         printf("%s", i == this->n - 1 ? "\0" : ", ");
     }
     printf("]");
@@ -716,8 +718,8 @@ MatrixClass<T> *MatrixClass<T>::divide_matrix_matrix(MatrixClass<T> *matrix_A, M
     result = new MatrixClass<T>(matrix_A->n, matrix_A->m);
 
     result->map(
-        MatrixType::NORMAL, [&matrix_A, &matrix_B](size_t i, size_t j, float element) -> float
-        { return (matrix_A->get(i, j) / matrix_B->get(i, j)); },
+        MatrixType::NORMAL, [&matrix_A, &matrix_B](size_t i, size_t j, T element) -> T
+        { return matrix_A->get(i, j).div(matrix_B->get(i, j)); },
         true);
 
     return result;
@@ -738,8 +740,8 @@ MatrixClass<T> *MatrixClass<T>::multiply_matrix_matrix(MatrixClass<T> *matrix_A,
     result = new MatrixClass<T>(matrix_A->n, matrix_A->m);
 
     result->map(
-        MatrixType::NORMAL, [&matrix_A, &matrix_B](size_t i, size_t j, float element) -> float
-        { return matrix_A->get(i, j) * matrix_B->get(i, j); },
+        MatrixType::NORMAL, [&matrix_A, &matrix_B](size_t i, size_t j, T element) -> T
+        { return matrix_A->get(i, j).mul(matrix_B->get(i, j)); },
         true);
 
     return result;
@@ -864,7 +866,7 @@ MatrixClass<T> *MatrixClass<T>::operator++()
 {
     before_each(this, "operator");
 
-    auto result = MatrixClass<T>::add_matrix_float(this, 1);
+    auto result = MatrixClass<T>::add_matrix_value(this, T());
 
     after_each(this, "operator");
 
@@ -876,7 +878,7 @@ MatrixClass<T> *MatrixClass<T>::operator--()
 {
     before_each(this, "operator");
 
-    auto result = MatrixClass<T>::substract_matrix_float(this, 1);
+    auto result = MatrixClass<T>::substract_matrix_value(this, T());
 
     after_each(this, "operator");
 
@@ -1129,7 +1131,7 @@ T MatrixClass<T>::trace()
 {
     before_each(this, "trace");
 
-    T result = 0;
+    T result;
 
     if (this->is_square())
     {
@@ -1607,7 +1609,7 @@ bool MatrixClass<T>::all(MatrixType type, BooleanProducer<T> boolean_producer)
 
     bool result = true;
 
-    this->for_each(type, [&boolean_producer, &result](size_t i, size_t j, float element) -> void
+    this->for_each(type, [&boolean_producer, &result](size_t i, size_t j, T element) -> void
                    {
         if (!boolean_producer(i, j, element))
             result = false; });
@@ -1881,7 +1883,7 @@ MatrixClass<T> *MatrixClass<T>::create_matrix_random(MatrixType type, size_t n, 
 
     matrix->map(
         type, [](size_t i, size_t j, T number) -> T
-        { return T::random(); },
+        { return T::rand(); },
         true);
 
     return matrix;
@@ -2015,7 +2017,7 @@ MatrixClass<T> *MatrixClass<T>::add_matrix_value(MatrixClass<T> *matrix, T a)
 template <typename T>
 MatrixClass<T> *MatrixClass<T>::substract_matrix_value(MatrixClass<T> *matrix, T a)
 {
-    return add_matrix_float(matrix, -a);
+    return add_matrix_value(matrix, -a);
 }
 
 /*not set*/

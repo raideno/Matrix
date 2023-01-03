@@ -1,6 +1,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 #include "lib/sle/sle.hpp"
 #include "lib/util/util.hpp"
@@ -10,7 +11,6 @@
 
 class Float : public MatrixValue
 {
-
 public:
     float data;
     Float()
@@ -60,34 +60,33 @@ public:
         printf("%f", data);
     }
 };
+
 int main()
 {
     printf("[start]\n");
 
-    MatrixClass<Float> *matrix_1 = MatrixClass<Float>::create_matrix_with(NORMAL, 3, 3, Float(5));
-    MatrixClass<Float> *matrix_2 = MatrixClass<Float>::create_matrix_with(NORMAL, 3, 3, Float(10));
-    MatrixClass<Float> *result = MatrixClass<Float>::add_matrix_matrix(matrix_1, matrix_2);
+    uint8_t colors[3][4] = {{255, 255, 0, 0},
+                            {255, 0, 255, 0},
+                            {255, 0, 0, 255}};
 
-    matrix_1->print();
-    matrix_2->print();
+    BitMapFile *file = read_bit_map_file("./images/image-2.bmp");
 
-    result->print();
-
-    /*
-    BitMapFile *file = read_bit_map_file("image-2.bmp");
-
-    for (size_t i = 0; i <= file->width; i++)
+    for (size_t i = 0; i < file->height; i++)
     {
-        file->content[file->width * file->height - i].alpha = 255;
-        file->content[file->width * file->height - i].red = 255;
-        file->content[file->width * file->height - i].green = 99;
-        file->content[file->width * file->height - i].blue = 71;
+        for (size_t j = 0; j < file->width; j++)
+        {
+            size_t index = i + j * file->width;
+            file->content[index].alpha = colors[i % 3][0];
+            file->content[index].red = colors[i % 3][1];
+            file->content[index].green = colors[i % 3][2];
+            file->content[index].blue = colors[i % 3][3];
+        }
     }
 
     persist_changes(file);
 
     printf("size: %d\n", file->size);
-    */
+
     printf("[end]\n");
 
     return 0;
