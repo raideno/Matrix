@@ -3,6 +3,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
 #include <inttypes.h>
 
 #include "lib/sle/sle.hpp"
@@ -75,7 +76,12 @@ int main()
                             {255, 175, 255, 0},
                             {255, 222, 50, 255}};
 
-    BitMapFile *bitmap_file = read_bit_map_file("./images/image-1.bmp");
+    std::string filename;
+
+    std::cout << "filename:";
+    std::getline(std::cin, filename);
+
+    BitMapFile *bitmap_file = read_bit_map_file(filename);
 
     /*
     bitmap_file->content->for_each(NORMAL, [](size_t i, size_t j, Pixel pixel) -> void
@@ -91,6 +97,8 @@ int main()
 
     SDL_Init(SDL_INIT_VIDEO);
     SDL_CreateWindowAndRenderer(bitmap_file->width, bitmap_file->height, 0, &window, &renderer);
+
+    SDL_SetWindowTitle(window, filename.c_str());
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
 
@@ -116,10 +124,15 @@ int main()
 
     printf("[bits_per_pixel]: %d\n", bitmap_file->bits_per_pixel);
     printf("[system]: click on \"D\" to start drawing\n");
+    printf("[system]: click on \"C\" to change color\n");
+    printf("[system]: click on \"S\" to save image\n");
 
     SDL_RenderPresent(renderer);
 
+    Pixel color;
     bool is_drawing = false;
+
+    SDL_SetRenderDrawColor(renderer, color.alpha, color.red, color.green, color.blue);
 
     while (running)
     {
@@ -143,6 +156,31 @@ int main()
                     is_drawing = !is_drawing;
                     printf("[system]: %s\n", is_drawing ? "Enabled Drawing" : "Disabled Drawing");
                 }
+
+                if (event.key.keysym.scancode == SDL_SCANCODE_C)
+                {
+                    printf("[system]: color alpha(0-255):");
+                    scanf("%hhd", &color.alpha);
+                    printf("[system]: color red(0-255):");
+                    scanf("%hhd", &color.red);
+                    printf("[system]: color green(0-255):");
+                    scanf("%hhd", &color.green);
+                    printf("[system]: color blue(0-255):");
+                    scanf("%hhd", &color.blue);
+
+                    SDL_SetRenderDrawColor(renderer, color.alpha, color.red, color.green, color.blue);
+                }
+
+                if (event.key.keysym.scancode == SDL_SCANCODE_S)
+                {
+                    std::string save_filename;
+                    printf("[system]: save to:");
+                    std::getline(std::cin, save_filename);
+
+                    printf("passed\n");
+
+                    persist_changes(bitmap_file, save_filename);
+                }
                 break;
 
             case SDL_MOUSEMOTION:
@@ -152,14 +190,12 @@ int main()
 
                 auto [actual_i, actual_j] = Pixel::get_actual_coordinates(event.motion.x, event.motion.y, bitmap_file->width, bitmap_file->height);
 
-                bitmap_file->content->set(actual_i, actual_j, Pixel(255, 255, 0, 0));
+                bitmap_file->content->set(actual_i, actual_j, color);
 
-                bitmap_file->content->set(actual_i + 1, actual_j, Pixel(255, 255, 0, 0));
-                bitmap_file->content->set(actual_i - 1, actual_j, Pixel(255, 255, 0, 0));
-                bitmap_file->content->set(actual_i, actual_j + 1, Pixel(255, 255, 0, 0));
-                bitmap_file->content->set(actual_i, actual_j - 1, Pixel(255, 255, 0, 0));
-
-                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+                bitmap_file->content->set(actual_i + 1, actual_j, color);
+                bitmap_file->content->set(actual_i - 1, actual_j, color);
+                bitmap_file->content->set(actual_i, actual_j + 1, color);
+                bitmap_file->content->set(actual_i, actual_j - 1, color);
 
                 SDL_RenderDrawPoint(renderer, event.motion.x, event.motion.y);
 
@@ -192,21 +228,7 @@ int main()
     SDL_DestroyWindow(window);
     SDL_Quit();
 
-    persist_changes(bitmap_file, "new_bitmap_file.bmp");
-
     printf("[end]\n");
 
     return EXIT_SUCCESS;
-
-    /*
-    for (size_t i = 0; i < bitmap_file->height; i++)
-    {
-        bitmap_file->content->map_line(
-            i, [](size_t i, size_t j, Pixel pixel) -> Pixel
-            { return i % 2 == 0 ? Pixel(255, 255, 255, 255) : Pixel(255, 0, 0, 0); },
-            true);
-    }
-
-    persist_changes(bitmap_file);
-    */
 }
