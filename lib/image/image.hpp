@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "../matrix/matrix.hpp"
+
 enum DibHeaderTypes
 {
     BITMAPCOREHEADER = 12, // also called OS21XBITMAPHEADER

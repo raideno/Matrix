@@ -5,8 +5,8 @@ CPPFLAGS=-std=c++17
 
 VPATH=$(wildcard lib/* build)
 
-CPPFILES=util.cpp matrix.cpp math.cpp image.cpp sle.cpp index.cpp
-CPPOBJECTS=util.o matrix.o math.o image.o sle.o index.o
+CPPFILES=util.cpp matrix.cpp math.cpp image.cpp sle.cpp window.cpp index.cpp
+CPPOBJECTS=util.o matrix.o math.o image.o sle.o window.o index.o
 
 BINARY=program
 
