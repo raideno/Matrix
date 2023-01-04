@@ -63,9 +63,6 @@ public:
     }
 };
 
-#define WIDTH 720
-#define HEIGHT 720
-
 #define THICKNESS 1
 
 int main()
