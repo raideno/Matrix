@@ -23,7 +23,7 @@ BitMapFile *read_bit_map_file(const std::string &name)
     FILE *file = NULL;
     BitMapFile *result = NULL;
 
-    file = fopen(name.c_str(), "rb+");
+    file = fopen(name.c_str(), "rb");
 
     if (file == NULL)
         return NULL;
@@ -77,21 +77,53 @@ BitMapFile *read_bit_map_file(const std::string &name)
     return result;
 }
 
-void persist_changes(BitMapFile *file)
+void persist_changes(BitMapFile *bitmap_file, const std::string &name)
 {
-    int long save = ftell(file->file);
+    // open in again here in read mode and save the changes
+    int long save = ftell(bitmap_file->file);
 
-    int size = file->width * file->height * sizeof(Pixel);
-    printf("writing size: %d\n", size);
+    FILE *file = fopen(name.c_str(), "wb");
 
-    fseek(file->file, file->offset, SEEK_SET);
-    // something to write everything at once
-    //  fwrite(file->content, sizeof(Pixel) * (file->width * file->height), 1, file->file);
+    fseek(bitmap_file->file, 0, SEEK_SET);
 
-    file->content->for_each(NORMAL, [file](size_t i, size_t j, Pixel pixel) -> void
-                            {
-        uint32_t pixel_value = Pixel::compose_pixel(pixel);
-        fwrite(&pixel_value, sizeof(pixel_value), 1, file->file); });
+    for (size_t i = 0; i < bitmap_file->offset; i++)
+    {
+        char buffer;
+        fread(&buffer, 1, 1, bitmap_file->file);
+        fwrite(&buffer, 1, 1, file);
+    }
 
-    fseek(file->file, save, SEEK_SET);
+    fseek(bitmap_file->file, save, SEEK_SET);
+    fseek(bitmap_file->file, bitmap_file->offset, SEEK_SET);
+
+    bitmap_file->content->for_each(NORMAL, [bitmap_file, file](size_t i, size_t j, Pixel pixel) -> void
+                                   {
+                                       switch (bitmap_file->bits_per_pixel)
+                                       {
+                                        case 1:
+                                            break;
+                                        case 2:
+                                            break;
+                                        case 4:
+                                            break;
+                                        case 8:
+                                            break;
+                                        case 16:
+                                            break;
+                                       case 24:
+                                       {
+
+                                           uint32_t pixel_value = Pixel::compose_24_bits_pixel(pixel);
+                                           fwrite(&pixel_value, 3, 1, file);
+                                           break;
+                                       }
+
+                                       case 32:
+                                       {
+
+                                           uint32_t pixel_value = Pixel::compose_32_bits_pixel(pixel);
+                                           fwrite(&pixel_value, 4, 1, file);
+                                           break;
+                                       }
+                                       } });
 }

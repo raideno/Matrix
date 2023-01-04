@@ -15,7 +15,7 @@ BINARY=program
 all:$(BINARY)
 
 $(BINARY):$(CPPOBJECTS)
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ -I/usr/include/SDL2 -lSDL2
 	mv *.o build/
 
 %.o:%.c

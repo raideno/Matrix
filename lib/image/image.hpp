@@ -70,9 +70,36 @@ public:
     {
         return Pixel(255, 255, 255, 255);
     }
+
+    static std::pair<size_t, size_t> get_sdl_coordinates(size_t actual_i, size_t actuaul_j, size_t width, size_t height)
+    {
+        size_t i_pixel_position = 0;
+        size_t j_pixel_position = height - 1;
+
+        for (size_t i = 0; i < height; i++, i_pixel_position = 0, j_pixel_position--)
+            for (size_t j = 0; j < width; j++, i_pixel_position++)
+                if (i == actual_i && j == actuaul_j)
+                    return std::pair<size_t, size_t>(i_pixel_position, j_pixel_position);
+
+        return std::pair<size_t, size_t>(-1, -1);
+    }
+
+    static std::pair<size_t, size_t> get_actual_coordinates(size_t pixel_i, size_t pixel_j, size_t width, size_t height)
+    {
+        size_t i_pixel_position = 0;
+        size_t j_pixel_position = height - 1;
+
+        for (size_t i = 0; i < height; i++, i_pixel_position = 0, j_pixel_position--)
+            for (size_t j = 0; j < width; j++, i_pixel_position++)
+                if (i_pixel_position == pixel_i && j_pixel_position == pixel_j)
+                    return std::pair<size_t, size_t>(i, j);
+
+        return std::pair<size_t, size_t>(-1, -1);
+    }
+
     void print()
     {
-        printf("(%u, %u, %u, %u)", this->alpha, this->red, this->green, this->blue);
+        printf("(%3u, %3u, %3u, %3u)", this->alpha, this->red, this->green, this->blue);
     }
 
     static void decompose_pixel(uint32_t value, uint8_t *alpha, uint8_t *red, uint8_t *green, uint8_t *blue)
@@ -83,9 +110,14 @@ public:
         *blue = (value & 0X000000FF);
     }
 
-    static uint32_t compose_pixel(Pixel pixel)
+    static uint32_t compose_32_bits_pixel(Pixel pixel)
     {
         return ((pixel.alpha & 0xff) << 24) + ((pixel.red & 0xff) << 16) + ((pixel.green & 0xff) << 8) + ((pixel.blue & 0xff));
+    }
+
+    static uint32_t compose_24_bits_pixel(Pixel pixel)
+    {
+        return ((pixel.red & 0xff) << 16) + ((pixel.green & 0xff) << 8) + ((pixel.blue & 0xff));
     }
 };
 
@@ -118,7 +150,7 @@ typedef struct BitMapFile BitMapFile;
 BitMapFile *read_bit_map_file(const std::string &name);
 int read_byte_at(FILE *file, std::size_t offset, std::size_t size);
 // if any changes have been made to the content proprety in BitMapFile structure it will persist them from memory to disk
-void persist_changes(BitMapFile *file);
+void persist_changes(BitMapFile *file, const std::string &name);
 
 //  image structure
 //  function to load an image

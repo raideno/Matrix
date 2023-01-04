@@ -80,11 +80,26 @@ class MatrixValue
 private:
 public:
     void print() {}
-    MatrixValue add(MatrixValue value) {}
-    MatrixValue mul(MatrixValue value) {}
-    MatrixValue sub(MatrixValue value) {}
-    MatrixValue div(MatrixValue value) {}
-    static MatrixValue rand() {}
+    MatrixValue add(MatrixValue value)
+    {
+        return MatrixValue();
+    }
+    MatrixValue mul(MatrixValue value)
+    {
+        return MatrixValue();
+    }
+    MatrixValue sub(MatrixValue value)
+    {
+        return MatrixValue();
+    }
+    MatrixValue div(MatrixValue value)
+    {
+        return MatrixValue();
+    }
+    static MatrixValue rand()
+    {
+        return MatrixValue();
+    }
 };
 
 template <typename T>

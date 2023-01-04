@@ -100,6 +100,20 @@ void MatrixClass<T>::set(size_t i, size_t j, T element)
 {
     before_each(this, "set");
 
+    if (i > this->n - 1)
+    {
+        if (MatrixClass<T>::is_debug_option_set(MatrixDebug::MATRIX_MISC))
+            printf(COLOR_BOLD_WHITE "[set]:" COLOR_RESET "invalid i provided\n");
+        return;
+    }
+
+    if (j > this->m - 1)
+    {
+        if (MatrixClass<T>::is_debug_option_set(MatrixDebug::MATRIX_MISC))
+            printf(COLOR_BOLD_WHITE "[set]:" COLOR_RESET "invalid i provided\n");
+        return;
+    }
+
     this->content[i][j] = element;
 
     after_each(this, "set");
