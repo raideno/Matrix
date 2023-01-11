@@ -2183,6 +2183,13 @@ MatrixClass<T> *MatrixClass<T>::map(MatrixType type, Producer<T> producer, bool 
 
     return result;
 }
+
+template <typename T>
+MatrixClass<T> *circle_map(MatrixType type, size_t i, size_t j, size_t radius, Producer<T> producer, bool inplace = false)
+{
+    
+}
+
 template <typename T>
 MatrixClass<T> *MatrixClass<T>::map_line(size_t line, Producer<T> producer, bool inplace)
 {

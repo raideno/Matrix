@@ -180,6 +180,8 @@ public:
     void for_each_line(size_t line, Consumer<T> consumer);
     void for_each_column(size_t column, Consumer<T> consumer);
 
+    MatrixClass *circle_map(MatrixType type, size_t i, size_t j, size_t radius, Producer<T> producer, bool inplace = false);
+
     MatrixClass *map(MatrixType type, Producer<T> producer, bool inplace = false);
     MatrixClass *map_line(size_t line, Producer<T> producer, bool inplace = false);
     MatrixClass *map_column(size_t column, Producer<T> producer, bool inplace = false);

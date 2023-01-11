@@ -4,6 +4,8 @@ Window::Window(const std::string &name, std::size_t width, std::size_t height)
 {
     this->window = SDL_CreateWindow(name.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 0);
     this->renderer = SDL_CreateRenderer(window, -1, 0);
+
+    SDL_RenderClear(renderer);
 }
 
 Window::~Window()

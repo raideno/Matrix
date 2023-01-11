@@ -120,6 +120,7 @@ int main()
 
                 if (event.key.keysym.scancode == SDL_SCANCODE_C)
                 {
+                    /*
                     printf("[system]: color alpha(0-255):");
                     scanf("%hhd", &color.alpha);
                     printf("[system]: color red(0-255):");
@@ -128,7 +129,7 @@ int main()
                     scanf("%hhd", &color.green);
                     printf("[system]: color blue(0-255):");
                     scanf("%hhd", &color.blue);
-
+                    */
                     window->set_draw_color(color);
                 }
 
@@ -156,14 +157,40 @@ int main()
                 bitmap_file->content->set(actual_i, actual_j + 1, color);
                 bitmap_file->content->set(actual_i, actual_j - 1, color);
 
+                bitmap_file->content->set(actual_i + 1, actual_j + 1, color);
+                bitmap_file->content->set(actual_i - 1, actual_j - 1, color);
+                bitmap_file->content->set(actual_i - 1, actual_j + 1, color);
+                bitmap_file->content->set(actual_i + 1, actual_j - 1, color);
+
                 window->draw_point(event.motion.x, event.motion.y);
 
                 try
                 {
+
+                    int r = 5;
+
+                    for(int i = event.motion.x - r; i <= event.motion.x + r; i++)
+                    {
+                    for(int j = event.motion.y - r; j <= event.motion.y + r; j++)
+                    {
+                        if((i-r)*(i-r) + (j-r)*(j-r) <= r*r)
+                        {
+                            printf("drawn\b");
+                            window->draw_point(i, j);
+                        }
+                    }
+                    }
+                    /*
                     window->draw_point(event.motion.x + 1, event.motion.y);
                     window->draw_point(event.motion.x - 1, event.motion.y);
                     window->draw_point(event.motion.x, event.motion.y + 1);
                     window->draw_point(event.motion.x, event.motion.y - 1);
+
+                    window->draw_point(event.motion.x + 1, event.motion.y + 1);
+                    window->draw_point(event.motion.x - 1, event.motion.y - 1);
+                    window->draw_point(event.motion.x - 1, event.motion.y + 1);
+                    window->draw_point(event.motion.x + 1, event.motion.y - 1);
+                    */
                 }
                 catch (const std::exception &e)
                 {
