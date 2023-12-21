@@ -543,7 +543,7 @@ MatrixClass<T>::~MatrixClass<T>()
 // make the print check the max in the column and not in the entire matrix
 // TODO: make it to choose if we print matrix name or not
 template <typename T>
-void MatrixClass<T>::print(size_t precision, bool sign)
+void MatrixClass<T>::print(size_t _precision, bool _sign)
 {
     before_each(this, "print");
 
@@ -1494,13 +1494,13 @@ MatrixClass<T> *MatrixClass<T>::concatenate_horizontal(size_t n_args, ...)
     MatrixClass<T> *result;
     MatrixClass<T> **matrices = (MatrixClass<T> **)calloc(n_args, sizeof(MatrixClass<T> *));
 
-    int lines = 0;
-    int columns = 0;
-    int progress = 0;
+    unsigned int lines = 0;
+    unsigned int columns = 0;
+    unsigned int progress = 0;
 
     va_start(ap, n_args);
 
-    for (int i = 0; i < n_args; i++)
+    for (size_t i = 0; i < n_args; i++)
     {
         matrix = va_arg(ap, MatrixClass<T> *);
         matrices[i] = matrix;
@@ -1896,7 +1896,7 @@ MatrixClass<T> *MatrixClass<T>::create_matrix_with(MatrixType type, size_t n, si
     MatrixClass<T> *matrix = new MatrixClass<T>(n, m);
 
     matrix->map(
-        type, [number](size_t i, size_t j, T element) -> T
+        type, [number](size_t _i, size_t _j, T _element) -> T
         { return number; },
         true);
 
@@ -1910,7 +1910,7 @@ MatrixClass<T> *MatrixClass<T>::create_matrix_random(MatrixType type, size_t n, 
     MatrixClass<T> *matrix = new MatrixClass<T>(n, m);
 
     matrix->map(
-        type, [](size_t i, size_t j, T number) -> T
+        type, [](size_t _i, size_t _j, T _number) -> T
         { return T::rand(); },
         true);
 

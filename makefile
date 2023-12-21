@@ -1,6 +1,7 @@
 # Compiler and flags
 CPP := g++
-CPPFLAGS := -std=c++17 -Wall -Wextra -Isrc -Isrc/lib
+CPPFLAGS := -std=c++17 -Isrc -Isrc/lib
+# CPPFLAGS := -std=c++17 -Wall -Wextra -Isrc -Isrc/lib
 
 # Directories
 SRC_DIR := src

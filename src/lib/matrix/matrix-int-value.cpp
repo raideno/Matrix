@@ -52,5 +52,5 @@ MatrixIntValue MatrixIntValue::rand()
 
 void MatrixIntValue::print()
 {
-    printf("%d", data);
+    printf("%+d", data);
 }
