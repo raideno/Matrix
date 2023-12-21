@@ -24,6 +24,7 @@
 
 int random_integer(int min = 0, int max = 10, unsigned int seed = 45);
 float random_float(float min = 0, float max = 1, unsigned int seed = 45);
+double random_double(double min = 0, double max = 1, unsigned int seed = 45);
 
 size_t count_digits(int number);
 

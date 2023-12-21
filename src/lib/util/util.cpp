@@ -9,6 +9,12 @@ float random_float(float min, float max, unsigned int seed)
     return min + scale * (max - min);
 }
 
+double random_double(double min, double max, unsigned int seed)
+{
+    double scale = rand() / (double)RAND_MAX; /* [0, 1.0] */
+    return min + scale * (max - min);
+}
+
 int random_integer(int min, int max, unsigned int seed)
 {
     return (rand() % (max - min)) + min;

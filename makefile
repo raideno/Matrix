@@ -1,30 +1,32 @@
-# slaches (/) in target names ? to target files in other directories ?
+# Compiler and flags
+CPP := g++
+CPPFLAGS := -std=c++17 -Wall -Wextra -Isrc -Isrc/lib
 
-CC=g++
-CPPFLAGS=-std=c++17
+# Directories
+SRC_DIR := src
+BUILD_DIR := build
 
-VPATH=$(wildcard lib/* build)
+# Files
+EXECUTABLE := program
 
-CPPFILES=util.cpp matrix.cpp math.cpp image.cpp sle.cpp window.cpp index.cpp
-CPPOBJECTS=util.o matrix.o math.o image.o sle.o window.o index.o
+SRC_FILES := $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/lib/**/*.cpp)
+OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRC_FILES))
 
-BINARY=program
+# Targets
+all: $(BUILD_DIR) $(EXECUTABLE)
 
-.PHONY: all run clean
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
-all:$(BINARY)
+$(EXECUTABLE): $(OBJ_FILES)
+	$(CPP) $(CPPFLAGS) -o $@ $^
 
-$(BINARY):$(CPPOBJECTS)
-	$(CC) -o $@ $^ -I/usr/include/SDL2 -lSDL2
-	mv *.o build/
-
-%.o:%.c
-	$(CC) $(CPPFLAGS) -c -o $@ $^
-
-run:$(BINARY)
-	@./$(BINARY)
+# This pattern rule generates object files in the correct directory
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(dir $@)
+	$(CPP) $(CPPFLAGS) -c -o $@ $<
 
 clean:
-	echo "test"
-	rm -rf $(CPPOBJECTS)
-	rm -rf build/*
+	rm -rf $(BUILD_DIR) $(EXECUTABLE)
+
+.PHONY: all clean

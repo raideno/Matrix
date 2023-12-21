@@ -178,6 +178,9 @@ MatrixClass<T> *MatrixClass<T>::select_array(size_t *lines, size_t n_lines, size
 }
 
 /*not set*/
+/**
+ * TODO: move it to FloatMatrixValue
+ */
 template <typename T>
 std::pair<MatrixClass<T> *, MatrixClass<T> *> MatrixClass<T>::lu_decomposition(MatrixClass<T> *matrix)
 {
@@ -187,7 +190,7 @@ std::pair<MatrixClass<T> *, MatrixClass<T> *> MatrixClass<T>::lu_decomposition(M
     MatrixClass<T> *l = (new MatrixClass<T>(matrix->n, matrix->m))->set_name("lower"); // make it's diagonal ones
 
     l->map(
-        DIAGONAL, [](size_t i, size_t j, float element) -> float
+        DIAGONAL, [](size_t i, size_t j, T element) -> T
         { return 1; },
         true);
 
@@ -538,6 +541,7 @@ MatrixClass<T>::~MatrixClass<T>()
 }
 
 // make the print check the max in the column and not in the entire matrix
+// TODO: make it to choose if we print matrix name or not
 template <typename T>
 void MatrixClass<T>::print(size_t precision, bool sign)
 {
@@ -564,9 +568,7 @@ void MatrixClass<T>::print(size_t precision, bool sign)
         printf("   [");
         for (size_t j = 0; j < this->m; j++)
         {
-            // print_float(this->get(i, j), size, precision, ' ', sign);
             this->get(i, j, test).print();
-            // std::cout << this->get(i, j, test);
             printf("%s", j == this->m - 1 ? "\0" : ", ");
         }
         printf("]\n");
@@ -596,9 +598,7 @@ void MatrixClass<T>::print_line(size_t line, size_t precision, bool sign)
     printf("[");
     for (size_t j = 0; j < this->m; j++)
     {
-        // printf("%.2f", matrix->matrix[line][j]);
         this->get(line, j).print();
-        // print_float(this->get(line, j), size, precision, ' ', sign);
         printf("%s", j == this->m - 1 ? "\0" : ", ");
     }
     printf("]");
@@ -626,7 +626,6 @@ void MatrixClass<T>::print_col(size_t column, size_t precision, bool sign)
     printf("[");
     for (size_t i = 0; i < this->n; i++)
     {
-        // print_float(this->get(i, column), size, precision, ' ', sign);
         this->get(i, column).print();
         printf("%s", i == this->n - 1 ? "\0" : ", ");
     }
@@ -918,7 +917,7 @@ std::pair<size_t, size_t> MatrixClass<T>::max(MatrixType type, bool absolute)
 
     std::pair<size_t, size_t> max(0, 0);
 
-    this->for_each(type, [&absolute, &matrix = *this, &max](size_t i, size_t j, float element) -> void
+    this->for_each(type, [&absolute, &matrix = *this, &max](size_t i, size_t j, T element) -> void
                    { 
                         if (absolute) {
                             if (abs(element) > abs(matrix[max.first][max.second])) {
@@ -944,7 +943,7 @@ size_t MatrixClass<T>::max_line(size_t line, bool abs)
 
     size_t mJ = 0;
 
-    this->for_each_line(line, [&matrix = *this, &line, &mJ](size_t i, size_t j, float element) -> void
+    this->for_each_line(line, [&matrix = *this, &line, &mJ](size_t i, size_t j, T element) -> void
                         {
         if (element > matrix[line][mJ])
             mJ = j; });
@@ -961,7 +960,7 @@ size_t MatrixClass<T>::max_column(size_t column, bool absolute)
 
     size_t mI = 0;
 
-    this->for_each_column(column, [&matrix = *this, &absolute, &column, &mI](size_t i, size_t j, float element) -> void
+    this->for_each_column(column, [&matrix = *this, &absolute, &column, &mI](size_t i, size_t j, T element) -> void
                           {
                             if (!absolute)
                             {
@@ -984,7 +983,7 @@ std::pair<size_t, size_t> MatrixClass<T>::min(MatrixType type, size_t *maxI, siz
 
     std::pair<size_t, size_t> max(0, 0);
 
-    this->for_each(type, [&absolute, &matrix = *this, &max](size_t i, size_t j, float element) -> void
+    this->for_each(type, [&absolute, &matrix = *this, &max](size_t i, size_t j, T element) -> void
                    { 
                         if (absolute) {
                             if (abs(element) < abs(matrix[max.first][max.second])) {
@@ -1010,7 +1009,7 @@ size_t MatrixClass<T>::min_line(size_t line, bool absolute)
 
     size_t mJ = 0;
 
-    this->for_each_line(line, [&absolute, &matrix = *this, &line, &mJ](size_t i, size_t j, float element) -> void
+    this->for_each_line(line, [&absolute, &matrix = *this, &line, &mJ](size_t i, size_t j, T element) -> void
                         {
                             if (!absolute)
                             {
@@ -1033,7 +1032,7 @@ size_t MatrixClass<T>::min_column(size_t column, bool absolute)
 
     size_t mI = 0;
 
-    this->for_each_column(column, [&matrix = *this, &absolute, &column, &mI](size_t i, size_t j, float element) -> void
+    this->for_each_column(column, [&matrix = *this, &absolute, &column, &mI](size_t i, size_t j, T element) -> void
                           {
                             if (!absolute)
                             {
@@ -1153,7 +1152,7 @@ T MatrixClass<T>::trace()
         return 0;
     }
 
-    this->for_each(DIAGONAL, [&result](size_t i, size_t j, float element) -> void
+    this->for_each(DIAGONAL, [&result](size_t i, size_t j, T element) -> void
                    { result += element; });
 
     after_each(this, "trace");
@@ -1427,7 +1426,7 @@ void MatrixClass<T>::read(MatrixType type)
     }
 
     this->map(
-        type, [](size_t i, size_t j, float number) -> float
+        type, [](size_t i, size_t j, T number) -> T
         {
             float result;
             printf("matrix[%ld][%ld]=", i, i);
@@ -1438,6 +1437,7 @@ void MatrixClass<T>::read(MatrixType type)
     after_each(this, "read");
 }
 
+/*make a param to choose if concatenation happens before or after*/
 /*not set*/
 template <typename T>
 MatrixClass<T> *MatrixClass<T>::concatenate_vertical(size_t n_args, ...)
@@ -1489,6 +1489,7 @@ MatrixClass<T> *MatrixClass<T>::concatenate_horizontal(size_t n_args, ...)
     // if one of the params is NULL, or invalid we destroy the allocated matrice + print an error
 
     va_list ap;
+
     MatrixClass<T> *matrix;
     MatrixClass<T> *result;
     MatrixClass<T> **matrices = (MatrixClass<T> **)calloc(n_args, sizeof(MatrixClass<T> *));
@@ -1661,6 +1662,9 @@ bool MatrixClass<T>::column_all(size_t column, BooleanProducer<T> boolean_produc
     return true;
 }
 
+/**
+ * TODO: move it to float value only
+ */
 template <typename T>
 MatrixClass<T> *MatrixClass<T>::inverse(bool destructive)
 {
@@ -1683,6 +1687,10 @@ MatrixClass<T> *MatrixClass<T>::inverse(bool destructive)
 
     transpose_cofactor_matrix = cofactor_matrix->transpose();
 
+    /**
+     * ERROR: fix
+     * TODO: fix
+     */
     result = MatrixClass<T>::multiply_matrix_float(transpose_cofactor_matrix, (1 / det));
 
     delete cofactor_matrix;
@@ -1733,6 +1741,9 @@ MatrixClass<T> *MatrixClass<T>::transpose(bool destructive)
     }
 }
 
+/**
+ * move to matrix-float only
+ */
 template <typename T>
 MatrixClass<T> *MatrixClass<T>::cofactor()
 {
@@ -1759,6 +1770,9 @@ MatrixClass<T> *MatrixClass<T>::cofactor()
     return result;
 }
 
+/**
+ * TODO: move to float only
+ */
 template <typename T>
 MatrixClass<T> *MatrixClass<T>::cofactor_of(size_t line, size_t column)
 {
@@ -1815,7 +1829,7 @@ MatrixClass<T> *MatrixClass<T>::permute_lines(size_t L1, size_t L2, bool destruc
 {
     before_each(this, "permute_lines");
 
-    float temp;
+    T temp;
     MatrixClass<T> *result = destructive ? this : this->copy();
 
     for (size_t j = 0; j < result->m; j++)
@@ -1835,7 +1849,7 @@ MatrixClass<T> *MatrixClass<T>::permute_columns(size_t C1, size_t C2, bool destr
 {
     before_each(this, "permute_columns");
 
-    float temp;
+    T temp;
     MatrixClass<T> *result = destructive ? this : this->copy();
 
     for (size_t i = 0; i < result->n; i++)
@@ -1967,7 +1981,7 @@ MatrixClass<T> *MatrixClass<T>::copy(MatrixClass<T> *matrix)
     MatrixClass<T> *result = new MatrixClass<T>(matrix->n, matrix->m);
 
     result->map(
-        NORMAL, [&matrix](size_t i, size_t j, float element) -> float
+        NORMAL, [&matrix](size_t i, size_t j, T element) -> T
         { return matrix->get(i, j); },
         true);
 
@@ -1979,6 +1993,7 @@ template <typename T>
 void MatrixClass<T>::srand(unsigned int seed)
 {
     MatrixClass<T>::seed = seed;
+    // srand(seed);
 }
 
 /*not set*/
@@ -2042,7 +2057,7 @@ MatrixClass<T> *MatrixClass<T>::multiply_matrix_value(MatrixClass<T> *matrix, T 
 
     result->map(
         NORMAL, [&matrix, &a](size_t i, size_t j, T element) -> T
-        { return matrix->get(i, j) * a; },
+        { return matrix->get(i, j).mul(a); },
         true);
 
     return result;
@@ -2187,7 +2202,6 @@ MatrixClass<T> *MatrixClass<T>::map(MatrixType type, Producer<T> producer, bool 
 template <typename T>
 MatrixClass<T> *circle_map(MatrixType type, size_t i, size_t j, size_t radius, Producer<T> producer, bool inplace = false)
 {
-    
 }
 
 template <typename T>

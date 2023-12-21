@@ -10,7 +10,8 @@
     it only work for 3x3 matrices
 */
 
-template <typename T>
+template <typename T, typename = std::enable_if_t<std::is_base_of<MatrixValue, T>::value>>
+
 MatrixClass<T> *convolution(MatrixClass<T> *entries, MatrixClass<T> *kernel)
 {
     auto [n_1, m_1] = entries->size();
@@ -18,7 +19,8 @@ MatrixClass<T> *convolution(MatrixClass<T> *entries, MatrixClass<T> *kernel)
     return n_1 > 1 ? matrix_convolution(entries, kernel) : vector_convolution(entries, kernel);
 }
 
-template <typename T>
+template <typename T, typename = std::enable_if_t<std::is_base_of<MatrixValue, T>::value>>
+
 MatrixClass<T> *matrix_convolution(MatrixClass<T> *matrix, MatrixClass<T> *kernel)
 {
 
@@ -47,7 +49,8 @@ MatrixClass<T> *matrix_convolution(MatrixClass<T> *matrix, MatrixClass<T> *kerne
     return result;
 }
 
-template <typename T>
+template <typename T, typename = std::enable_if_t<std::is_base_of<MatrixValue, T>::value>>
+
 MatrixClass<T> *vector_convolution(MatrixClass<T> *array, MatrixClass<T> *kernel)
 {
     auto [n_1, m_1] = array->size();

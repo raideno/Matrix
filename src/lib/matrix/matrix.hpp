@@ -12,6 +12,10 @@
 #include <iostream>
 #include <functional>
 
+#include "../util/util.hpp"
+
+#include "matrix-value.hpp"
+
 /**
  * template class need to adhere some criterias:
  * have some operators available
@@ -75,37 +79,10 @@ using BooleanProducer = const std::function<bool(size_t i, size_t j, T value)>;
     print function,
 */
 
-class MatrixValue
-{
-private:
-public:
-    void print() {}
-    MatrixValue add(MatrixValue value)
-    {
-        return MatrixValue();
-    }
-    MatrixValue mul(MatrixValue value)
-    {
-        return MatrixValue();
-    }
-    MatrixValue sub(MatrixValue value)
-    {
-        return MatrixValue();
-    }
-    MatrixValue div(MatrixValue value)
-    {
-        return MatrixValue();
-    }
-    static MatrixValue rand()
-    {
-        return MatrixValue();
-    }
-};
-
 template <typename T>
 class MatrixClass
 {
-    static_assert(std::is_base_of<MatrixValue, T>{}, "doit dérive de MatrixValue");
+    static_assert(std::is_base_of<MatrixValue, T>{}, "Must derive from MatrixValue");
 
 private:
     T **content = NULL;
