@@ -1,6 +1,7 @@
 #ifndef __PL_HPP__
 #define __PL_HPP__
 
+#include <vector>
 #include <iostream>
 #include <type_traits>
 
@@ -8,8 +9,6 @@
 #include "../matrix/matrix-value.hpp"
 
 #include "./matrix-pl-constraint-type-value.hpp"
-
-#define MAXIMUM_PLS 64
 
 // enum PLConstraintType
 // {
@@ -27,8 +26,18 @@ class PL
     static_assert(std::is_base_of<MatrixValue, T>{}, "Must derive from MatrixValue");
 
 private:
-    static size_t *created_pls_length;
-    static PL *all_created_pls[MAXIMUM_PLS];
+    static size_t number_of_created_pls;
+    static size_t number_of_destroyed_pls;
+    // static std::vector<PL *> all_created_pls;
+
+    static wchar_t get_subscript_character(unsigned int number);
+    static void print_variable(const char *name = "x", unsigned int number = 0);
+
+    PL(size_t number_of_constraints, size_t number_of_variables, MatrixClass<T> *matrixA, MatrixClass<MatrixPLConstraintTypeValue> *matrixAB, MatrixClass<T> *matrixB, MatrixClass<T> *matrixC);
+    ~PL();
+
+    size_t number_of_variables;
+    size_t number_of_constraints;
 
     MatrixClass<T> *matrixC;
     MatrixClass<T> *matrixA;
@@ -38,17 +47,31 @@ private:
 
     MatrixClass<T> *matrixB;
 
-    static wchar_t get_subscript_character(unsigned int number);
-    static void print_variable(const char *name = "x", unsigned int number = 0);
-
-    PL();
-    PL(MatrixClass<T> *matrixA, MatrixClass<MatrixPLConstraintTypeValue> *matrixAB, MatrixClass<T> *matrixB, MatrixClass<T> *matrixC);
-    ~PL();
-
 public:
     static PL *create_pl(size_t constraints_len, size_t variables_len);
-    static PL *create_pl_from(size_t constraints_len, size_t variables_len);
-    static PL *create_pl_random(size_t constraints_len, size_t variables_len);
+    static PL *create_random_pl(size_t constraints_len, size_t variables_len);
+
+    bool convert_contraint_type_to(size_t constraint_index, PLConstraintType constraint_type);
+
+    PLConstraintType get_constraint_type(size_t constraint_index);
+
+    // std::string name;
+    // std::string description;
+
+    // PL* copy() || duplicate();
+
+    // bool standarize_constraint();
+    // bool convert_constraint();
+
+    // bool constraints_map();
+    // bool constraints_foreach();
+    // bool constraints_every();
+    // bool constraints_each();
+
+    // bool variables_map();
+    // bool variables_foreach();
+    // bool variables_every();
+    // bool variables_each();
 
     void print();
     void print_objective_function();

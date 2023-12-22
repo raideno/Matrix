@@ -36,7 +36,7 @@ MatrixPLConstraintTypeValue MatrixPLConstraintTypeValue::sub(MatrixPLConstraintT
 
 MatrixPLConstraintTypeValue MatrixPLConstraintTypeValue::mul(MatrixPLConstraintTypeValue value)
 {
-    MatrixPLConstraintTypeValue result;
+    MatrixPLConstraintTypeValue result = this->data * value.data;
     return result;
 }
 
@@ -65,11 +65,11 @@ MatrixPLConstraintTypeValue MatrixPLConstraintTypeValue::rand()
 
     case 1:
         return 1;
-        // return PLConstraintType::LOWER;
+        // return PLConstraintType::LOWER_OR_EQUAL;
 
     case 2:
         return 2;
-        // return PLConstraintType::LOWER_OR_EQUAL;
+        // return PLConstraintType::LOWER;
 
     default:
         return 0;
@@ -95,11 +95,11 @@ void MatrixPLConstraintTypeValue::print()
         break;
 
     case 1:
-        printf("<");
+        printf("≤");
         break;
 
     case 2:
-        printf("≤");
+        printf("<");
         break;
 
     default:

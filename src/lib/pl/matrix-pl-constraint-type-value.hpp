@@ -10,8 +10,8 @@
 //     BIGGER = -2,
 //     BIGGER_OR_EQUAL = -1,
 //     EQUAL = 0,
-//     LOWER = 1,
-//     LOWER_OR_EQUAL = 2,
+//     LOWER_OR_EQUAL = 1,
+//     LOWER = 2,
 // };
 // typedef enum PLConstraintType PLConstraintType;
 typedef int PLConstraintType;

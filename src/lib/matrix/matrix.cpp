@@ -409,18 +409,37 @@ MatrixClass<T> *MatrixClass<T>::resize(size_t n, size_t m, bool inline_)
     {
         MatrixClass<T> *save = this->copy()->set_name("resize-save");
 
+        size_t thisN = this->n;
+        size_t thisM = this->m;
+
         MatrixClass<T>::desallocate(this);
 
-        this->allocate_matrix(n, m);
+        this->content = this->allocate_matrix(n, m);
 
-        for (size_t i = 0; i < std::min(this->n, n); i++)
-            for (size_t j = 0; j < std::min(this->m, m); j++)
-                (*this)[i][j] = save->get(i, j);
+        /**
+         * MatrixClass<T>::desallocate(this); this will put both this.n and this.m to 0
+         * which will lead the loop to be executed 0 times and thus having
+         */
+
+        // for (size_t i = 0; i < std::min(this->n, n); i++)
+        for (size_t i = 0; i < std::min(thisN, n); i++)
+        {
+            // for (size_t j = 0; j < std::min(this->m, m); j++)
+            for (size_t j = 0; j < std::min(thisM, m); j++)
+            {
+                // ERROR: you are assigning addresses, and this one have already been assigned
+                // this->set(i, j, T(0));
+                this->set(i, j, T(save->get(i, j).data));
+                // this->set(i, j, save->get(i, j));
+                // (*this)[i][j] = save->get(i, j);
+            }
+        }
 
         this->n = n;
         this->m = m;
 
-        // Todo: destroy save
+        // TODO: destroy save
+        save->destroy();
 
         after_each(this, "resize");
 
@@ -1982,7 +2001,9 @@ MatrixClass<T> *MatrixClass<T>::copy(MatrixClass<T> *matrix)
 
     result->map(
         NORMAL, [&matrix](size_t i, size_t j, T element) -> T
-        { return matrix->get(i, j); },
+        { 
+            // ERROR: you are returning an address, and this one might me modfied from elsewhere which can cause an error if the copied matrix is destroyed or the other one
+            return matrix->get(i, j); },
         true);
 
     return result;
@@ -1993,7 +2014,8 @@ template <typename T>
 void MatrixClass<T>::srand(unsigned int seed)
 {
     MatrixClass<T>::seed = seed;
-    // srand(seed);
+
+    std::srand(seed);
 }
 
 /*not set*/
