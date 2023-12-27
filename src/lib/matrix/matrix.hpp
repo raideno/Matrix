@@ -127,6 +127,8 @@ public:
 
     static void srand(unsigned int seed);
 
+    static void print_debug_informations();
+
     static void set_debug_options(MatrixDebug debug);
     static bool is_debug_option_set(MatrixDebug debug_option);
 
@@ -183,6 +185,8 @@ public:
     MatrixClass *cofactor();
     MatrixClass *cofactor_of(size_t line, size_t column);
 
+    void find_eigen_stuff();
+
     bool have_center();
     std::pair<int, int> get_center();
 
@@ -236,9 +240,10 @@ public:
     size_t max_column(size_t column, bool abs = false);
 
     // make the print check the max in the column and not in the entire matrix
-    void print(size_t precision = 2, bool sign = true);
-    void print_line(size_t line, size_t precision = 2, bool sign = true);
-    void print_col(size_t column, size_t precision = 2, bool sign = true);
+    MatrixClass *print(size_t precision = 2, bool sign = true);
+    MatrixClass<T> *print_line(size_t line, size_t precision = 2, bool sign = true);
+    MatrixClass<T> *print_col(size_t column, size_t precision = 2, bool sign = true);
+
     static void print_matrices_concatenation(size_t n_args, ...);
 
     MatrixClass *resize(size_t n, size_t m, bool inline_ = false);

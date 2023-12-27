@@ -308,22 +308,27 @@ Sle<T> *Sle<T>::gauss(bool inplace)
 
     for (size_t k = 0; k < result->order - 1; k++)
     {
-        float a = result->matrix->get(k, k);
+        // pivot value
+        float pivot = result->matrix->get(k, k);
+        // we loop through all the lines below the pivotes
         for (size_t i = k + 1; i < order; i++)
         {
+            // element below the pivot on i line (same column as pivot, lower line)
             float b = result->matrix->get(i, k);
+            // we loop through all the elemnts of the line
             for (size_t j = k; j < order; j++)
             {
-                (*result->matrix)[i][j] -= ((b / a) * result->matrix->get(k, j));
+                (*result->matrix)[i][j] -= ((b / pivot) * result->matrix->get(k, j));
             }
-            (*result->vector)[i][0] -= ((b / a) * result->vector->get(k, 0));
+            // we apply the operation on the second-membre too
+            (*result->vector)[i][0] -= ((b / pivot) * result->vector->get(k, 0));
         }
     }
 
     return result;
 }
-template <typename T>
 
+template <typename T>
 Sle<T> *Sle<T>::gauss_total(bool inplace)
 {
     Sle<T> *result = inplace ? this : this->copy();

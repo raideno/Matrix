@@ -61,6 +61,7 @@ MatrixClass<T> *MatrixClass<T>::round(bool inplace)
 {
     before_each(this, "round");
 
+    // TODO: fix
     MatrixClass<T> *result = this->map(
         MatrixType::NORMAL, [](size_t i, size_t j, T value) -> T
         { return std::round(value); },
@@ -178,9 +179,6 @@ MatrixClass<T> *MatrixClass<T>::select_array(size_t *lines, size_t n_lines, size
 }
 
 /*not set*/
-/**
- * TODO: move it to FloatMatrixValue
- */
 template <typename T>
 std::pair<MatrixClass<T> *, MatrixClass<T> *> MatrixClass<T>::lu_decomposition(MatrixClass<T> *matrix)
 {
@@ -205,12 +203,13 @@ std::pair<MatrixClass<T> *, MatrixClass<T> *> MatrixClass<T>::lu_decomposition(M
     {
         for (size_t i = k + 1; i < matrix->n; i++) // go though all the lines below the pivot to create zeros
         {
-            float a = (*u)[k][k];
-            float b = (*u)[i][k];
-            float factor = b / a;
+            T a = (*u)[k][k];
+            T b = (*u)[i][k];
+            T factor = b.div(a);
             for (size_t j = k; j < matrix->n; j++)
             {
-                (*u)[i][j] = (*u)[i][j] - factor * (*u)[k][j];
+                // (*u)[i][j] = (*u)[i][j] - factor * (*u)[k][j];
+                (*u)[i][j] = (*u)[i][j].sub(factor.mul((*u)[k][j]));
                 (*l)[i][k] = factor;
             }
         }
@@ -562,7 +561,7 @@ MatrixClass<T>::~MatrixClass<T>()
 // make the print check the max in the column and not in the entire matrix
 // TODO: make it to choose if we print matrix name or not
 template <typename T>
-void MatrixClass<T>::print(size_t _precision, bool _sign)
+MatrixClass<T> *MatrixClass<T>::print(size_t _precision, bool _sign)
 {
     before_each(this, "print");
 
@@ -595,24 +594,26 @@ void MatrixClass<T>::print(size_t _precision, bool _sign)
     printf("]\n");
 
     after_each(this, "print");
+
+    return this;
 }
 
 template <typename T>
-void MatrixClass<T>::print_line(size_t line, size_t precision, bool sign)
+MatrixClass<T> *MatrixClass<T>::print_line(size_t line, size_t precision, bool sign)
 {
     before_each(this, "print_line");
 
-    size_t size;
-    std::pair<size_t, size_t> max;
+    // size_t size;
+    // std::pair<size_t, size_t> max;
 
     if (line > this->n - 1)
     {
         printf("[print_matrix_line]: invalid line provided\n");
-        return;
+        return this;
     }
 
-    max = this->max(NORMAL);
-    size = count_digits(this->get(max.first, max.second));
+    // max = this->max(NORMAL);
+    // size = count_digits(this->get(max.first, max.second));
 
     printf("[");
     for (size_t j = 0; j < this->m; j++)
@@ -623,10 +624,12 @@ void MatrixClass<T>::print_line(size_t line, size_t precision, bool sign)
     printf("]");
 
     after_each(this, "print_line");
+
+    return this;
 }
 
 template <typename T>
-void MatrixClass<T>::print_col(size_t column, size_t precision, bool sign)
+MatrixClass<T> *MatrixClass<T>::print_col(size_t column, size_t precision, bool sign)
 {
     before_each(this, "print_col");
 
@@ -636,7 +639,7 @@ void MatrixClass<T>::print_col(size_t column, size_t precision, bool sign)
     if (column > this->m - 1)
     {
         printf("[print_matrix_col]: invalid column provided\n");
-        return;
+        return this;
     }
 
     max = this->max(NORMAL);
@@ -651,6 +654,8 @@ void MatrixClass<T>::print_col(size_t column, size_t precision, bool sign)
     printf("]");
 
     after_each(this, "print_col");
+
+    return this;
 }
 
 /*not set*/
@@ -665,9 +670,16 @@ void MatrixClass<T>::print_matrices_concatenation(size_t n_args, ...)
     va_start(ap, n_args);
 
     matrix = va_arg(ap, MatrixClass<T> *);
+
+    if (matrix == NULL)
+    {
+        printf("[print_matrices_concatenation]: null matrix was provided\n");
+        return;
+    }
+
     lines = matrix->n;
 
-    for (int i = 1; i < n_args; i++)
+    for (int i = 1; i <= n_args; i++)
     {
         if (matrix == NULL)
         {
@@ -688,10 +700,23 @@ void MatrixClass<T>::print_matrices_concatenation(size_t n_args, ...)
             matrix = va_arg(ap, MatrixClass<T> *);
 
             if (i < matrix->n)
+            {
                 matrix->print_line(i, 2, true);
-            // print_matrix_line(matrix, i, 2, true);
+                // print_matrix_line(matrix, i, 2, true);
+            }
             else
-                printf("\t");
+            {
+                printf("[");
+                for (size_t i = 0; i < matrix->m; i++)
+                {
+                    printf("--%s", i == matrix->m - 1 ? "" : ", ");
+                }
+
+                printf("]");
+
+                // printf("\t");
+            }
+
             printf("\t");
         }
         va_end(ap);
@@ -876,19 +901,19 @@ MatrixClass<T> *MatrixClass<T>::operator/(T number)
 }
 
 /*
-MatrixClass<T> &MatrixClass<T>::operator+=(float number)
+MatrixClass<T> &MatrixClass<T>::operator+=(T value)
 {
 }
 
-MatrixClass<T> &MatrixClass<T>::operator/=(float number)
+MatrixClass<T> &MatrixClass<T>::operator/=(T value)
 {
 }
 
-MatrixClass<T> &MatrixClass<T>::operator*=(float number)
+MatrixClass<T> &MatrixClass<T>::operator*=(T value)
 {
 }
 
-MatrixClass<T> &MatrixClass<T>::operator-=(float number)
+MatrixClass<T> &MatrixClass<T>::operator-=(T value)
 {
 }
 */
@@ -898,6 +923,7 @@ MatrixClass<T> *MatrixClass<T>::operator++()
 {
     before_each(this, "operator");
 
+    // TODO: fix, default value (1) of the T type
     auto result = MatrixClass<T>::add_matrix_value(this, T());
 
     after_each(this, "operator");
@@ -910,6 +936,7 @@ MatrixClass<T> *MatrixClass<T>::operator--()
 {
     before_each(this, "operator");
 
+    // TODO: fix, default value (1) of the T type
     auto result = MatrixClass<T>::substract_matrix_value(this, T());
 
     after_each(this, "operator");
@@ -929,6 +956,7 @@ T *MatrixClass<T>::operator[](size_t i)
     return result;
 }
 
+// TODO: fix
 template <typename T>
 std::pair<size_t, size_t> MatrixClass<T>::max(MatrixType type, bool absolute)
 {
@@ -937,17 +965,17 @@ std::pair<size_t, size_t> MatrixClass<T>::max(MatrixType type, bool absolute)
     std::pair<size_t, size_t> max(0, 0);
 
     this->for_each(type, [&absolute, &matrix = *this, &max](size_t i, size_t j, T element) -> void
-                   { 
+                   {
                         if (absolute) {
-                            if (abs(element) > abs(matrix[max.first][max.second])) {
+                            if (T::compare(element.abs(), matrix[max.first][max.second].abs()) == MatrixValueComparaisons::BIGGER) {
                                 max.first = i;
                                 max.second = j;
                             }
                         } else {
-                                if (element > matrix[max.first][max.second]) {
-                                max.first = i;
-                                max.second = j;
-                            }
+                                if (element.compare(matrix[max.first][max.second]) == MatrixValueComparaisons::BIGGER) {
+                                    max.first = i;
+                                    max.second = j;
+                                }
                         } });
 
     after_each(this, "max");
@@ -964,7 +992,7 @@ size_t MatrixClass<T>::max_line(size_t line, bool abs)
 
     this->for_each_line(line, [&matrix = *this, &line, &mJ](size_t i, size_t j, T element) -> void
                         {
-        if (element > matrix[line][mJ])
+        if (element.compare(matrix[line][mJ]) == MatrixValueComparaisons::BIGGER)
             mJ = j; });
 
     after_each(this, "max_line");
@@ -983,10 +1011,10 @@ size_t MatrixClass<T>::max_column(size_t column, bool absolute)
                           {
                             if (!absolute)
                             {
-                                if (element > matrix[mI][column])
+                                if (element.compare(matrix[mI][column]) == MatrixValueComparaisons::BIGGER)
                                     mI = i;
                             } else {
-                                if (abs(element) > abs(matrix[mI][column]))
+                                if (element.abs().compare(matrix[mI][column].abs()) == MatrixValueComparaisons::BIGGER)
                                     mI = i;
                             } });
 
@@ -1005,12 +1033,12 @@ std::pair<size_t, size_t> MatrixClass<T>::min(MatrixType type, size_t *maxI, siz
     this->for_each(type, [&absolute, &matrix = *this, &max](size_t i, size_t j, T element) -> void
                    { 
                         if (absolute) {
-                            if (abs(element) < abs(matrix[max.first][max.second])) {
+                            if (element.abs().compare(matrix[max.first][max.second].abs()) == MatrixValueComparaisons::LOWER) {
                                 max.first = i;
                                 max.second = j;
                             }
                         } else {
-                                if (element < matrix[max.first][max.second]) {
+                                if (element.compare(matrix[max.first][max.second]) == MatrixValueComparaisons::LOWER) {
                                 max.first = i;
                                 max.second = j;
                             }
@@ -1032,10 +1060,10 @@ size_t MatrixClass<T>::min_line(size_t line, bool absolute)
                         {
                             if (!absolute)
                             {
-                                if (element < matrix[line][mJ])
+                                if (element.compare(matrix[line][mJ]) == MatrixValueComparaisons::LOWER)
                                     mJ = j;
                             } else {
-                                if (abs(element) < abs(matrix[line][mJ]))
+                                if (element.abs().compare(matrix[line][mJ].abs()) == MatrixValueComparaisons::LOWER)
                                     mJ = j;
                             } });
 
@@ -1055,10 +1083,10 @@ size_t MatrixClass<T>::min_column(size_t column, bool absolute)
                           {
                             if (!absolute)
                             {
-                                if (element < matrix[mI][column])
+                                if (element.compare(matrix[mI][column]) == MatrixValueComparaisons::LOWER)
                                     mI = i;
                             } else {
-                                if (abs(element) < abs(matrix[mI][column]))
+                                if (element.abs().compare(matrix[mI][column].abs()) == MatrixValueComparaisons::LOWER)
                                     mI = i;
                             } });
 
@@ -1113,7 +1141,10 @@ T MatrixClass<T>::multiply_matrix_line_matrix_column(MatrixClass<T> *matrix_A, M
     }
 
     for (size_t i = 0; i < matrix_A->m; i++)
-        result += (matrix_A->get(LINE, i) * matrix_B->get(i, COLUMN));
+    {
+        // result += (matrix_A->get(LINE, i) * matrix_B->get(i, COLUMN));
+        result = result.add((matrix_A->get(LINE, i).mul(matrix_B->get(i, COLUMN))));
+    }
 
     return result;
 }
@@ -1138,14 +1169,17 @@ T MatrixClass<T>::determinent()
         return (*this)[0][0];
 
     if (this->n == 2)
-        return ((*this)[0][0] * (*this)[1][1]) - ((*this)[0][1] * (*this)[1][0]);
+        // return ((*this)[0][0] * (*this)[1][1]) - ((*this)[0][1] * (*this)[1][0]);
+        return ((*this)[0][0].mul((*this)[1][1])).sub(((*this)[0][1].mul((*this)[1][0])));
 
     for (size_t i = 0; i < this->n; i++)
     {
         MatrixClass<T> *cofact = this->cofactor_of(0, i)->set_name("cofactor-matrix");
         /*0 in 0 + i in power fonction is for the j (i) but since we selected the first line*/
         /*should we let the "+1" or no ? or replace it with a "+1" ? and why exactly "+2" ? why it wouldn't work normaly ?*/
-        result += std::pow(-1, 0 + i + 2) * (*this)[0][i] * cofact->determinent();
+        // TODO: fix
+        // result += std::pow(-1, 0 + i + 2) * (*this)[0][i] * cofact->determinent();
+        result = result.add(std::pow(-1, 0 + i + 2) == 1 ? T::identity() : T::negative_identity()).mul((*this)[0][i].mul(cofact->determinent()));
 
         delete cofact;
         // TODO: fix the matrix destruction
@@ -1172,7 +1206,7 @@ T MatrixClass<T>::trace()
     }
 
     this->for_each(DIAGONAL, [&result](size_t i, size_t j, T element) -> void
-                   { result += element; });
+                   { result = result.add(element); });
 
     after_each(this, "trace");
 
@@ -1287,6 +1321,8 @@ MatrixClass<T> *MatrixClass<T>::delete_lines(size_t start, size_t end)
     return result;
 }
 
+// TODO: choose if it's in place or not
+// TODO: make a version that returns the deleted matrice
 template <typename T>
 MatrixClass<T> *MatrixClass<T>::delete_columns(size_t start, size_t end)
 {
@@ -1353,7 +1389,8 @@ bool MatrixClass<T>::is_diagonal()
     {
         for (size_t j = 0; j < this->m; j++)
         {
-            if (i != j && (*this)[i][j] != 0)
+            // TODO: fix, make sure T is null value
+            if (i != j && (*this)[i][j].compare(T::null()) != MatrixValueComparaisons::EQUAL)
                 return false;
         }
     }
@@ -1386,7 +1423,8 @@ bool MatrixClass<T>::is_lower_triangular()
 
     for (size_t i = 0; i < this->n; i++)
         for (size_t j = i + 1; j < this->m; j++)
-            if ((*this)[i][j] != 0)
+            // TODO: fix, make sure T is null value
+            if ((*this)[i][j].compare(T::null()) != MatrixValueComparaisons::EQUAL)
                 return false;
 
     after_each(this, "is_lower_triangular");
@@ -1404,7 +1442,8 @@ bool MatrixClass<T>::is_upper_triangular()
 
     for (size_t i = 0; i < this->n; i++)
         for (size_t j = 0; j < i; j++)
-            if ((*this)[i][j] != 0)
+            // TODO: fix, make sure T is null value
+            if ((*this)[i][j].compare(T::null()) != MatrixValueComparaisons::EQUAL)
                 return false;
 
     after_each(this, "is_upper_triangular");
@@ -1434,6 +1473,13 @@ bool MatrixClass<T>::is_square()
 }
 
 template <typename T>
+void MatrixClass<T>::print_debug_informations()
+{
+    printf(COLOR_BOLD_WHITE "[MatrixClass<T>-print_debug_informations]" COLOR_RESET " allocated_matrices (%ld) desallocated_matrices (%ld).\n", MatrixClass<T>::allocated_matrices, MatrixClass<T>::desallocated_matrices);
+    printf(COLOR_BOLD_WHITE "[MatrixClass<T>-print_debug_informations]" COLOR_RESET " created_matrices (%ld) destroyed_matrices (%ld).\n", MatrixClass<T>::created_matrices, MatrixClass<T>::destroyed_matrices);
+}
+
+template <typename T>
 void MatrixClass<T>::read(MatrixType type)
 {
     before_each(this, "read");
@@ -1447,9 +1493,10 @@ void MatrixClass<T>::read(MatrixType type)
     this->map(
         type, [](size_t i, size_t j, T number) -> T
         {
-            float result;
             printf("matrix[%ld][%ld]=", i, i);
-            scanf("%f", &result);
+            // TODO: function to read
+            T result = T::read();
+            // scanf("%f", &result);
             return result; },
         true);
 
@@ -1586,7 +1633,7 @@ T MatrixClass<T>::reduce_line(size_t line, Reducer<T> reducer, T initialValue)
     T result = initialValue;
 
     this->for_each_line(line, [&reducer, &result](size_t i, size_t j, T value) -> void
-                        { result += reducer(result, i, j, value); });
+                        { result = result.add(reducer(result, i, j, value)); });
 
     after_each(this, "reduce_line");
 
@@ -1601,7 +1648,7 @@ T MatrixClass<T>::reduce_column(size_t column, Reducer<T> reducer, T initialValu
     T result = initialValue;
 
     this->for_each_column(column, [&reducer, &result](size_t i, size_t j, T value) -> void
-                          { result += reducer(result, i, j, value); });
+                          { result = result.add(reducer(result, i, j, value)); });
 
     after_each(this, "reduce_column");
 
@@ -1681,22 +1728,58 @@ bool MatrixClass<T>::column_all(size_t column, BooleanProducer<T> boolean_produc
     return true;
 }
 
-/**
- * TODO: move it to float value only
- */
+template <typename T>
+void MatrixClass<T>::find_eigen_stuff()
+{
+    printf("[MatrixClass<T>-find_eigen_stuff()]: start\n");
+
+    if (!this->is_square())
+    {
+        printf("[MatrixClass<T>-find_eigen_stuff()::ERROR]: can't find eigen values for non-square matrix\n");
+        return;
+    }
+
+    size_t MAX_ITERATIONS = 32;
+
+    // T eigen_value;
+    MatrixClass<T> *eigen_vector = MatrixClass<T>::create_matrix_with(MatrixType::NORMAL, this->n, 1, T());
+    T eigen_value = eigen_vector->get(eigen_vector->max(MatrixType::NORMAL, true).first, eigen_vector->max(MatrixType::NORMAL, true).second);
+
+    for (size_t i = 0; i < MAX_ITERATIONS; i++)
+    {
+        MatrixClass<T> *new_temp__eigen_vector = MatrixClass<T>::multiply_matrix_matrix(this, eigen_vector);
+
+        // T new_eigen_value = new_temp__eigen_vector->max(MatrixType::NORMAL, true);
+
+        T new_eigen_value = new_temp__eigen_vector->get(new_temp__eigen_vector->max(MatrixType::NORMAL, true).first, new_temp__eigen_vector->max(MatrixType::NORMAL, true).second);
+
+        MatrixClass<T> *new_eigen_vector = MatrixClass<T>::divide_matrix_value(this, new_eigen_value);
+
+        eigen_value = new_eigen_value;
+        eigen_vector = new_eigen_vector;
+    }
+
+    printf("[MatrixClass<T>-find_eigen_stuff()]:\n");
+    eigen_value.print();
+
+    printf("[MatrixClass<T>-find_eigen_stuff()]: end\n");
+}
+
 template <typename T>
 MatrixClass<T> *MatrixClass<T>::inverse(bool destructive)
 {
     before_each(this, "inverse");
 
-    float det;
+    // TODO: fix !!! determinent of int values will not be a int value or will it ? so how we handle that case ?
+    T det;
+
     MatrixClass<T> *result;
     MatrixClass<T> *cofactor_matrix;
     MatrixClass<T> *transpose_cofactor_matrix;
 
     det = this->determinent();
 
-    if (det == 0)
+    if (det.compare(T::null()) == MatrixValueComparaisons::EQUAL)
     {
         printf("[inverse_matrix]: determinant is equal to 0\n");
         return NULL;
@@ -1710,7 +1793,8 @@ MatrixClass<T> *MatrixClass<T>::inverse(bool destructive)
      * ERROR: fix
      * TODO: fix
      */
-    result = MatrixClass<T>::multiply_matrix_float(transpose_cofactor_matrix, (1 / det));
+
+    result = MatrixClass<T>::multiply_matrix_value(transpose_cofactor_matrix, det.inverse());
 
     delete cofactor_matrix;
     delete transpose_cofactor_matrix;
@@ -1760,9 +1844,6 @@ MatrixClass<T> *MatrixClass<T>::transpose(bool destructive)
     }
 }
 
-/**
- * move to matrix-float only
- */
 template <typename T>
 MatrixClass<T> *MatrixClass<T>::cofactor()
 {
@@ -1777,9 +1858,11 @@ MatrixClass<T> *MatrixClass<T>::cofactor()
         for (size_t j = 0; j < this->n; j++)
         {
             MatrixClass<T> *cofact = this->cofactor_of(i, j);
-            float det_cofact = cofact->determinent();
+            T det_cofact = cofact->determinent();
             /*(*result)[i][j] = power(-1, i + 1 + j + 1) * det_cofact;*/
-            (*result)[i][j] = std::pow(-1, i + 1 + j + 1) * det_cofact;
+            // TODO: how to fix power values ?
+            // (*result)[i][j] = std::pow(-1, i + 1 + j + 1) * det_cofact;
+            (*result)[i][j] = (std::pow(-1, i + 1 + j + 1) == 1 ? T::identity() : T::negative_identity()).mul(det_cofact);
             delete cofact;
         }
     }
@@ -1789,21 +1872,18 @@ MatrixClass<T> *MatrixClass<T>::cofactor()
     return result;
 }
 
-/**
- * TODO: move to float only
- */
 template <typename T>
 MatrixClass<T> *MatrixClass<T>::cofactor_of(size_t line, size_t column)
 {
     before_each(this, "cofactor_of");
 
     int k = 0;
-    float *array;
+    T *array;
     MatrixClass<T> *result;
 
     // TODO: check that these are valid lines and columns
 
-    array = (float *)calloc(this->n * this->n, sizeof(float));
+    array = (T *)calloc(this->n * this->n, sizeof(T));
 
     for (size_t i = 0; i < this->n; i++)
     {
@@ -2093,7 +2173,8 @@ MatrixClass<T> *MatrixClass<T>::divide_matrix_value(MatrixClass<T> *matrix, T a)
 
     result->map(
         NORMAL, [&matrix, &a](size_t i, size_t j, T element) -> T
-        { return matrix->get(i, j) / a; },
+        // TODO: fix
+        { return matrix->get(i, j).div(a); },
         true);
 
     return result;

@@ -11,6 +11,7 @@
 #include "lib/matrix/matrix.cpp"
 
 #include "lib/matrix/matrix-int-value.hpp"
+#include "lib/matrix/matrix-double-value.hpp"
 
 #define THICKNESS 1
 
@@ -23,31 +24,31 @@ int main()
 
     printf("[program]: start\n");
 
-    // unsigned int seed = time(NULL);
-    unsigned int seed = 1703272015;
+    unsigned int seed = time(NULL);
+    // unsigned int seed = 1703345585;
+    // unsigned int seed = 1703272015;
+    // unsigned int seed = 1703325252;
 
     printf("[program]: seed = %d\n", seed);
 
     // TODO: create same function in PL and SLE classes that'll make a call to the MatrixClass::srand function at their turn
-    MatrixClass<MatrixIntValue>::srand(seed);
+    MatrixClass<MatrixDoubleValue>::srand(seed);
 
-    PL<MatrixIntValue> *pl = PL<MatrixIntValue>::create_random_pl(NUMBER_OF_CONSTRAINTS, NUMBER_OF_VARIABLES);
+    MatrixClass<MatrixDoubleValue> *matrix = MatrixClass<MatrixDoubleValue>::create_matrix_random(MatrixType::NORMAL, 2, 2);
 
-    printf("[program]: pl-created\n");
+    matrix->print();
 
-    pl->print();
+    printf("[matrix-det]: ");
+    matrix->determinent().print();
+    printf("\n");
 
-    for (size_t i = 0; i < NUMBER_OF_CONSTRAINTS; i++)
-    {
-        // pl->convert_contraint_type_to(i, pl->get_constraint_type(i) * -1);
-        pl->convert_contraint_type_to(i, 0);
-    }
+    matrix->inverse()->print()->destroy();
 
-    printf("\n\n");
+    // matrix->find_eigen_stuff();
 
-    pl->print();
+    MatrixClass<MatrixDoubleValue>::print_debug_informations();
 
-    pl->destroy();
+    matrix->destroy();
 
     printf("[program]: end\n");
 

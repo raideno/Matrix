@@ -20,6 +20,15 @@
 // };
 // // typedef enum PLConstraintType PLConstraintType;
 
+enum PLForms
+{
+    MIXED_CANONICAL,    // truc par defaut
+    CANONICAL_PURE,     // all constraints are lower-or-equal (<=)
+    STANDAR,            // all constraints are equal (=)
+    SIMPLIFIED_STANDAR, // standar + matrix can be decomposed to A = (I | H)
+};
+typedef enum PLForms PLForms;
+
 template <typename T>
 class PL
 {
@@ -55,10 +64,13 @@ public:
 
     PLConstraintType get_constraint_type(size_t constraint_index);
 
+    PL *convert_to_form(PLForms form, bool in_place = false);
+    bool is_on_form(PLForms form);
+
+    static PL *copy(PL *pl);
+
     // std::string name;
     // std::string description;
-
-    // PL* copy() || duplicate();
 
     // bool standarize_constraint();
     // bool convert_constraint();

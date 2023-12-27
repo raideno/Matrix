@@ -189,6 +189,78 @@ void PL<T>::print_objective_function()
 }
 
 template <typename T>
+PL<T> *PL<T>::copy(PL<T> *pl)
+{
+    PL *copy = new PL(
+        pl->number_of_constraints,
+        pl->number_of_variables,
+        MatrixClass<T>::copy(pl->matrixA),
+        MatrixClass<MatrixPLConstraintTypeValue>::copy(pl->matrixAB),
+        MatrixClass<T>::copy(pl->matrixB),
+        MatrixClass<T>::copy(pl->matrixC));
+
+    return copy;
+}
+
+template <typename T>
+PL<T> *PL<T>::convert_to_form(PLForms form, bool in_place)
+{
+    // TODO: verify that the PL can be converted first
+    bool pl_can_be_converted = this->matrixAB->all(
+        MatrixType::NORMAL,
+        [](size_t _i, size_t _j, MatrixPLConstraintTypeValue element) -> bool
+        { return element.data != -2 && element.data != 2; });
+
+    if (!pl_can_be_converted)
+    {
+        // TODO: add debug option
+        printf("[PL::convert_to_form()]: conversion to standar form failed\n");
+        return NULL;
+    }
+
+    PL *pl = in_place ? this : PL<T>::copy(this);
+
+    for (size_t i = 0; i < pl->number_of_constraints; i++)
+        pl->convert_contraint_type_to(i, 0);
+
+    return pl;
+}
+
+template <typename T>
+bool PL<T>::is_on_form(PLForms form)
+{
+    switch (form)
+    {
+    case PLForms::STANDAR:;
+        {
+            /**
+             * all constraints are equalities
+             * all variables are positive
+             */
+
+            bool all_constraints_are_equalities = this->matrixAB->all(
+                MatrixType::NORMAL,
+                [](size_t _i, size_t _j, MatrixPLConstraintTypeValue element) -> MatrixPLConstraintTypeValue
+                { return element.data == 0; });
+
+            bool all_variables_are_positive = true;
+
+            return all_constraints_are_equalities && all_variables_are_positive;
+
+            break;
+        }
+    case PLForms::MIXED_CANONICAL:
+    case PLForms::MIXED_CANONICAL:
+    case PLForms::SIMPLIFIED_STANDAR:
+    default:
+    {
+        return false;
+        break;
+    }
+    }
+}
+
+template <typename T>
 PLConstraintType PL<T>::get_constraint_type(size_t constraint_index)
 {
     return this->matrixAB->get(constraint_index, 0).data;
@@ -220,6 +292,11 @@ bool PL<T>::convert_contraint_type_to(size_t constraint_index, PLConstraintType 
      * bigger       - bigger                x
      *
      * other ones..
+     */
+
+    /**
+     * can inverse bigger, bigger-or-equal, lower, lower-or-equal
+     * transform biffer-or-equal or lower-or-equal to equality
      */
 
     PLConstraintType actual_constraint_type = this->matrixAB->get(constraint_index, 0).data;
@@ -288,6 +365,12 @@ bool PL<T>::convert_contraint_type_to(size_t constraint_index, PLConstraintType 
 
     if (actual_constraint_type == 0)
     {
+        /**
+         * make sure we are not converting to strict-bigger or strict-lower
+         *
+         */
+        if (target_constraint_type == 2 || target_constraint_type == -2)
+            return false;
         return false;
     }
 

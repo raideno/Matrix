@@ -22,9 +22,12 @@
 #define COLOR_BOLD_WHITE "\033[1m\033[37m"
 #define COLOR_UNDERLINE "\033[4m"
 
-int random_integer(int min = 0, int max = 10, unsigned int seed = 45);
-float random_float(float min = 0, float max = 1, unsigned int seed = 45);
-double random_double(double min = 0, double max = 1, unsigned int seed = 45);
+#define UTIL_DEFAULT_SEED 45
+
+int random_integer(int min = -10, int max = 10, unsigned int seed = UTIL_DEFAULT_SEED);
+float random_float(float min = -10, float max = 10, unsigned int seed = UTIL_DEFAULT_SEED);
+double random_double(double min = -10, double max = 10, unsigned int seed = UTIL_DEFAULT_SEED);
+bool random_bool();
 
 size_t count_digits(int number);
 
